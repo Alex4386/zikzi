@@ -1,0 +1,159 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "yarn"
+          cache-dependency-path: web/yarn.lock
+
+      - name: Install dependencies
+        working-directory: web
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        working-directory: web
+        run: yarn build
+
+      - name: Upload frontend artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: internal/web/static/
+
+  build-binaries:
+    name: Build Binaries
+    needs: build-frontend
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-24.04-arm
+            goos: linux
+            goarch: arm64
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            ext: .exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Download frontend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: internal/web/static/
+
+      - name: Install Deps
+        run: go mod download
+
+      - name: Generate Swagger docs
+        run: ./docgen.sh
+        
+      - name: Build
+        env:
+          CGO_ENABLED: 1
+        run: |
+          go build -ldflags="-s -w" -o zikzi-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} ./cmd/zikzi
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: zikzi-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: zikzi-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-binaries, docker]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          cp artifacts/zikzi-linux-amd64/zikzi-linux-amd64 release/
+          cp artifacts/zikzi-linux-arm64/zikzi-linux-arm64 release/
+          cp artifacts/zikzi-darwin-amd64/zikzi-darwin-amd64 release/
+          cp artifacts/zikzi-darwin-arm64/zikzi-darwin-arm64 release/
+          cp artifacts/zikzi-windows-amd64/zikzi-windows-amd64.exe release/
+          cd release
+          sha256sum * > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+          generate_release_notes: true

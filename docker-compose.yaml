@@ -1,0 +1,39 @@
+services:
+  zikzi:
+    build: .
+    ports:
+      - "8080:8080"   # Web UI + API
+      - "9100:9100"   # PostScript printer
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml:ro
+      - ./zikzi.db:/app/zikzi.db
+    environment:
+      - GIN_MODE=release
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # Optional: PostgreSQL database (uncomment to use)
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: zikzi
+  #     POSTGRES_PASSWORD: zikzi
+  #     POSTGRES_DB: zikzi
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U zikzi"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  zikzi-data:
+  # postgres-data:

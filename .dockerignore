@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+zikzi
+*.exe
+dist/
+docs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Config and data
+config.yaml
+*.db
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Frontend build artifacts (we rebuild in Docker)
+web/node_modules/
+web/dist/
+internal/web/static/*
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+Dockerfile
+docker-compose*.yaml
+.dockerignore

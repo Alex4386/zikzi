@@ -1,0 +1,256 @@
+const API_BASE = '/api/v1'
+
+class Api {
+  private token: string | null = null
+
+  setToken(token: string) {
+    this.token = token
+  }
+
+  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string>,
+    }
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`
+    }
+
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }))
+      throw new Error(error.error || 'Request failed')
+    }
+
+    return response.json()
+  }
+
+  // Auth
+  login(username: string, password: string) {
+    return this.request<{ access_token: string; expires_in: number }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    })
+  }
+
+  register(username: string, email: string, password: string, display_name: string) {
+    return this.request<{ access_token: string; expires_in: number }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password, display_name }),
+    })
+  }
+
+  // Users
+  getCurrentUser() {
+    return this.request<{
+      id: string
+      username: string
+      email: string
+      display_name: string
+      is_admin: boolean
+    }>('/users/me')
+  }
+
+  updateUser(data: { display_name?: string; email?: string }) {
+    return this.request('/users/me', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // Jobs
+  getJobs(page = 1, limit = 20, status?: string) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+    if (status) params.set('status', status)
+    return this.request<{
+      jobs: PrintJob[]
+      total: number
+      page: number
+      limit: number
+    }>(`/jobs?${params}`)
+  }
+
+  getJob(id: string) {
+    return this.request<PrintJob>(`/jobs/${id}`)
+  }
+
+  deleteJob(id: string) {
+    return this.request(`/jobs/${id}`, { method: 'DELETE' })
+  }
+
+  getJobDownloadUrl(id: string, type: 'original' | 'pdf' | 'thumbnail') {
+    const path = type === 'original' ? 'download' : type
+    return `${API_BASE}/jobs/${id}/${path}`
+  }
+
+  // IPs
+  getIPs() {
+    return this.request<IPRegistration[]>('/ips')
+  }
+
+  registerIP(ip_address: string, description: string) {
+    return this.request<IPRegistration>('/ips', {
+      method: 'POST',
+      body: JSON.stringify({ ip_address, description }),
+    })
+  }
+
+  deleteIP(id: string) {
+    return this.request(`/ips/${id}`, { method: 'DELETE' })
+  }
+
+  detectIP() {
+    return this.request<{ ip_address: string }>('/ips/detect')
+  }
+
+  // Admin endpoints
+  getAdminStats() {
+    return this.request<AdminStats>('/admin/stats')
+  }
+
+  getAdminUsers() {
+    return this.request<AdminUser[]>('/admin/users')
+  }
+
+  getAdminJobs(page = 1, limit = 20, status?: string, userId?: string) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+    if (status) params.set('status', status)
+    if (userId) params.set('user_id', userId)
+    return this.request<{
+      jobs: AdminJob[]
+      total: number
+      page: number
+      limit: number
+    }>(`/admin/jobs?${params}`)
+  }
+
+  getOrphanedJobs(page = 1, limit = 20) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+    return this.request<{
+      jobs: AdminJob[]
+      total: number
+      page: number
+      limit: number
+    }>(`/admin/jobs/orphaned?${params}`)
+  }
+
+  getAdminJob(id: string) {
+    return this.request<AdminJob>(`/admin/jobs/${id}`)
+  }
+
+  assignJob(jobId: string, userId: string) {
+    return this.request(`/admin/jobs/${jobId}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    })
+  }
+
+  // User password change
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.request<{ message: string }>('/users/me/password', {
+      method: 'PUT',
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    })
+  }
+
+  // Admin user management
+  createUser(data: { username: string; email: string; password: string; display_name?: string; is_admin?: boolean }) {
+    return this.request<AdminUser>('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  getAdminUser(id: string) {
+    return this.request<AdminUser>(`/admin/users/${id}`)
+  }
+
+  updateAdminUser(id: string, data: { username?: string; email?: string; display_name?: string; is_admin?: boolean }) {
+    return this.request<AdminUser>(`/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  changeUserPassword(id: string, password: string) {
+    return this.request<{ message: string }>(`/admin/users/${id}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({ password }),
+    })
+  }
+
+  deleteUser(id: string) {
+    return this.request<{ message: string }>(`/admin/users/${id}`, {
+      method: 'DELETE',
+    })
+  }
+}
+
+export interface PrintJob {
+  id: string
+  created_at: string
+  user_id: string
+  source_ip: string
+  hostname: string
+  document_name: string
+  app_name: string
+  os_version: string
+  page_count: number
+  file_size: number
+  status: 'received' | 'processing' | 'completed' | 'failed'
+  processed_at?: string
+  error?: string
+}
+
+export interface IPRegistration {
+  id: string
+  created_at: string
+  ip_address: string
+  description: string
+  is_active: boolean
+}
+
+export interface AdminStats {
+  total_users: number
+  total_jobs: number
+  jobs_today: number
+  total_pages: number
+  orphaned_jobs: number
+}
+
+export interface AdminUser {
+  id: string
+  username: string
+  email: string
+  display_name: string
+  is_admin: boolean
+  created_at: string
+  job_count: number
+}
+
+export interface AdminJob {
+  id: string
+  created_at: string
+  user_id?: string
+  user?: {
+    id: string
+    username: string
+    display_name: string
+  }
+  source_ip: string
+  hostname: string
+  document_name: string
+  app_name: string
+  page_count: number
+  file_size: number
+  status: 'received' | 'processing' | 'completed' | 'failed'
+  processed_at?: string
+  error?: string
+}
+
+export const api = new Api()

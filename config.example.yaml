@@ -1,0 +1,38 @@
+log_level: "info"              # debug, info, warn, error
+
+web:
+  port: 8080
+  host: "0.0.0.0"
+  trust_proxy: false           # Trust X-Forwarded-For headers
+  trusted_proxies: []          # List of trusted proxy IPs/CIDRs (e.g., ["127.0.0.1", "10.0.0.0/8"])
+
+printer:
+  port: 9100
+  host: "0.0.0.0"
+  allow_unregistered_ips: false  # Allow print jobs from unregistered IPs
+
+ipp:
+  enabled: true
+  port: 631                    # Standard IPP port
+  host: "0.0.0.0"
+  trust_proxy: false           # Trust X-Forwarded-For headers
+  trusted_proxies: []          # List of trusted proxy IPs/CIDRs
+
+database:
+  driver: "sqlite"  # sqlite, postgres
+  dsn: "zikzi.db"   # For postgres: "host=localhost user=zikzi password=secret dbname=zikzi"
+
+auth:
+  jwt_secret: "change-me-in-production"
+  allow_local: true
+  oidc:
+    enabled: false
+    provider_url: "https://accounts.google.com"
+    client_id: ""
+    client_secret: ""
+    redirect_url: "http://localhost:8080/api/v1/auth/oidc/callback"
+    auto_create_users: true  # Create new users on first OIDC login (set to false to require pre-created accounts)
+
+storage:
+  path: "./data"
+  ghostscript_bin: "gs"  # Path to GhostScript binary

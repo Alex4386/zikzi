@@ -1,0 +1,48 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/zikzi
+
+# Test binary
+*.test
+
+# Output of go coverage
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Config and data
+config.yaml
+*.db
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+
+# Generated Swagger docs
+docs/
+
+# Frontend
+web/node_modules/
+
+# Keep static dir but ignore built files (they're generated)
+internal/web/static/*
+!internal/web/static/.gitkeep
+
+# Potential MCP Stuff
+.*-mcp
+
