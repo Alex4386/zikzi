@@ -41,5 +41,5 @@ auth:
       domains: []    # Email domains allowed (e.g., ["example.com", "company.org"])
 
 storage:
-  path: "./data"
+  path: "./data/store"
   ghostscript_bin: "gs"  # Path to GhostScript binary
