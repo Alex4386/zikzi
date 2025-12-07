@@ -9,7 +9,7 @@ It is designed for:
 - Environments where physical printers are not available or practical.
 
 ## Features
-- Emulates a network printer utilizing `:9100` raw printing protocol.
+- Emulates a network printer utilizing `:9100` raw printing protocol. (IPP support coming soon)
 - Web interface for managing print jobs and downloading PDF files.
 - Supports multi-user via OIDC authentication.
 - Converts print jobs to PDF format using GhostScript.
