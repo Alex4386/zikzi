@@ -1,39 +1,69 @@
 services:
   zikzi:
-    build: .
+    # Use pre-built image from GitHub Container Registry
+    image: ghcr.io/alex4386/zikzi:latest
+
+    # Or build locally from source (comment out 'image' above and uncomment below)
+    # build: .
+
+    container_name: zikzi
+    restart: unless-stopped
     ports:
-      - "8080:8080"   # Web UI + API
+      - "8080:8080"   # HTTP API + Web UI
       - "9100:9100"   # PostScript printer
+      - "631:631"     # IPP (Internet Printing Protocol)
     volumes:
       - ./data:/app/data
       - ./config.yaml:/app/config.yaml:ro
-      - ./zikzi.db:/app/zikzi.db
     environment:
       - GIN_MODE=release
-    restart: unless-stopped
+      # Optional: Override config via environment variables
+      # - LOG_LEVEL=info
+      # - WEB_PORT=8080
+      # - PRINTER_PORT=9100
+      # - IPP_PORT=631
+      # - DATABASE_DRIVER=sqlite
+      # Database path must be inside /app/data for persistence (e.g., data/zikzi.db or ./data/zikzi.db)
+      # - DATABASE_DSN=data/zikzi.db
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/v1/health"]
       interval: 30s
       timeout: 3s
+      start_period: 10s
       retries: 3
-      start_period: 5s
+    networks:
+      - zikzi-network
+    # Uncomment to use PostgreSQL instead of SQLite
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
 
-  # Optional: PostgreSQL database (uncomment to use)
+  # Optional: PostgreSQL database (uncomment to use instead of SQLite)
+  # Update config.yaml: database.driver=postgres, database.dsn="host=postgres user=zikzi password=zikzi-password dbname=zikzi sslmode=disable"
   # postgres:
   #   image: postgres:16-alpine
+  #   container_name: zikzi-postgres
+  #   restart: unless-stopped
   #   environment:
-  #     POSTGRES_USER: zikzi
-  #     POSTGRES_PASSWORD: zikzi
   #     POSTGRES_DB: zikzi
+  #     POSTGRES_USER: zikzi
+  #     POSTGRES_PASSWORD: zikzi-password
   #   volumes:
   #     - postgres-data:/var/lib/postgresql/data
-  #   restart: unless-stopped
   #   healthcheck:
   #     test: ["CMD-SHELL", "pg_isready -U zikzi"]
   #     interval: 10s
   #     timeout: 5s
   #     retries: 5
+  #   networks:
+  #     - zikzi-network
+  #   ports:
+  #     - "5432:5432"
+
+networks:
+  zikzi-network:
+    driver: bridge
 
 volumes:
-  zikzi-data:
+  # Uncomment if using PostgreSQL
   # postgres-data:

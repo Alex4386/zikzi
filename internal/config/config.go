@@ -49,12 +49,19 @@ type AuthConfig struct {
 }
 
 type OIDCConfig struct {
-	Enabled         bool   `mapstructure:"enabled"`
-	ProviderURL     string `mapstructure:"provider_url"`
-	ClientID        string `mapstructure:"client_id"`
-	ClientSecret    string `mapstructure:"client_secret"`
-	RedirectURL     string `mapstructure:"redirect_url"`
-	AutoCreateUsers bool   `mapstructure:"auto_create_users"` // Create new users on first OIDC login
+	Enabled         bool      `mapstructure:"enabled"`
+	ProviderURL     string    `mapstructure:"provider_url"`
+	ClientID        string    `mapstructure:"client_id"`
+	ClientSecret    string    `mapstructure:"client_secret"`
+	RedirectURL     string    `mapstructure:"redirect_url"`
+	AutoCreateUsers bool      `mapstructure:"auto_create_users"` // Create new users on first OIDC login
+	ACL             ACLConfig `mapstructure:"acl"`
+}
+
+type ACLConfig struct {
+	Users   []string `mapstructure:"users"`   // Specific email addresses allowed
+	Groups  []string `mapstructure:"groups"`  // OIDC groups allowed
+	Domains []string `mapstructure:"domains"` // Email domains allowed
 }
 
 type StorageConfig struct {

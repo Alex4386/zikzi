@@ -32,12 +32,13 @@ type stateData struct {
 
 // OIDCClaims represents the claims from an ID token
 type OIDCClaims struct {
-	Subject       string `json:"sub"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Name          string `json:"name"`
-	Picture       string `json:"picture"`
-	PreferredUsername string `json:"preferred_username"`
+	Subject           string   `json:"sub"`
+	Email             string   `json:"email"`
+	EmailVerified     bool     `json:"email_verified"`
+	Name              string   `json:"name"`
+	Picture           string   `json:"picture"`
+	PreferredUsername string   `json:"preferred_username"`
+	Groups            []string `json:"groups"` // OIDC groups claim
 }
 
 func NewOIDCProvider(cfg config.OIDCConfig) (*OIDCProvider, error) {

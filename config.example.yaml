@@ -20,7 +20,7 @@ ipp:
 
 database:
   driver: "sqlite"  # sqlite, postgres
-  dsn: "zikzi.db"   # For postgres: "host=localhost user=zikzi password=secret dbname=zikzi"
+  dsn: "./data/zikzi.db"   # For postgres: "host=localhost user=zikzi password=secret dbname=zikzi"
 
 auth:
   jwt_secret: "change-me-in-production"
@@ -32,6 +32,12 @@ auth:
     client_secret: ""
     redirect_url: "http://localhost:8080/api/v1/auth/oidc/callback"
     auto_create_users: true  # Create new users on first OIDC login (set to false to require pre-created accounts)
+    acl:
+      # Access Control List - restrict who can access via OIDC
+      # If all lists are empty, ACL is disabled and all authenticated users are allowed
+      users: []      # Specific email addresses allowed (e.g., ["user@example.com", "admin@example.com"])
+      groups: []     # OIDC groups allowed (e.g., ["/admin", "/developers"])
+      domains: []    # Email domains allowed (e.g., ["example.com", "company.org"])
 
 storage:
   path: "./data"

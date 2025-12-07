@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alex4386/zikzi/internal/auth"
@@ -220,6 +221,12 @@ func (h *AuthHandler) OIDCCallback(c *gin.Context) {
 		return
 	}
 
+	// Check ACL before allowing access
+	if !h.checkACL(claims) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "access denied: user not in allowed ACL"})
+		return
+	}
+
 	// Find or create user
 	var user models.User
 	result := h.db.Where("oidc_subject = ? AND oidc_provider = ?", claims.Subject, h.config.OIDC.ProviderURL).First(&user)
@@ -310,6 +317,45 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, newToken)
+}
+
+// checkACL validates if the user is allowed based on ACL configuration
+func (h *AuthHandler) checkACL(claims *auth.OIDCClaims) bool {
+	acl := h.config.OIDC.ACL
+
+	// If all ACL lists are empty, ACL is disabled - allow all authenticated users
+	if len(acl.Users) == 0 && len(acl.Groups) == 0 && len(acl.Domains) == 0 {
+		return true
+	}
+
+	// Check if user email is in allowed users list
+	for _, allowedUser := range acl.Users {
+		if strings.EqualFold(claims.Email, allowedUser) {
+			return true
+		}
+	}
+
+	// Check if user's email domain is in allowed domains list
+	if emailParts := strings.Split(claims.Email, "@"); len(emailParts) == 2 {
+		domain := strings.ToLower(emailParts[1])
+		for _, allowedDomain := range acl.Domains {
+			if strings.EqualFold(domain, allowedDomain) {
+				return true
+			}
+		}
+	}
+
+	// Check if user belongs to any allowed groups
+	for _, userGroup := range claims.Groups {
+		for _, allowedGroup := range acl.Groups {
+			if userGroup == allowedGroup {
+				return true
+			}
+		}
+	}
+
+	// No ACL match found
+	return false
 }
 
 func (h *AuthHandler) generateToken(user *models.User) (*TokenResponse, error) {
