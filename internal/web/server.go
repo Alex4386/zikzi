@@ -66,6 +66,10 @@ func (s *Server) setupRoutes() {
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		})
 
+		// Config endpoint
+		configHandler := handlers.NewConfigHandler(s.config)
+		api.GET("/config", configHandler.GetPublicConfig)
+
 		// Public routes
 		auth := api.Group("/auth")
 		{

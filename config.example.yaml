@@ -10,6 +10,7 @@ printer:
   port: 9100
   host: "0.0.0.0"
   allow_unregistered_ips: false  # Allow print jobs from unregistered IPs
+  external_hostname: ""          # External hostname for printer (e.g., "printer.example.com"). If empty, uses current hostname. Port 9100 is always appended.
 
 ipp:
   enabled: true

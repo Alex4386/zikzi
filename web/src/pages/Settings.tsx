@@ -1,7 +1,24 @@
 import { Printer } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useQuery } from '@tanstack/react-query'
+
+interface Config {
+  printer_external_hostname: string
+}
 
 export default function Settings() {
+  const { data: config } = useQuery<Config>({
+    queryKey: ['config'],
+    queryFn: async () => {
+      const res = await fetch('/api/v1/config')
+      if (!res.ok) throw new Error('Failed to fetch config')
+      return res.json()
+    },
+  })
+
+  const printerHostname = config?.printer_external_hostname || window.location.hostname
+  const printerUrl = `${printerHostname}:9100`
+
   return (
     <div className="p-6 max-w-2xl">
       <h1 className="text-2xl font-bold mb-6">Printer Setup</h1>
@@ -22,7 +39,7 @@ export default function Settings() {
           <div className="bg-muted rounded-lg p-4">
             <p className="text-sm text-muted-foreground mb-1">Printer Address</p>
             <code className="text-lg font-mono text-primary">
-              {window.location.hostname}:9100
+              {printerUrl}
             </code>
           </div>
 

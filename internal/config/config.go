@@ -27,6 +27,7 @@ type PrinterConfig struct {
 	Port                 int    `mapstructure:"port"`
 	Host                 string `mapstructure:"host"`
 	AllowUnregisteredIPs bool   `mapstructure:"allow_unregistered_ips"`
+	ExternalHostname     string `mapstructure:"external_hostname"` // External hostname for printer access (e.g., "printer.example.com")
 }
 
 type IPPConfig struct {
