@@ -64,6 +64,6 @@ networks:
   zikzi-network:
     driver: bridge
 
-volumes:
-  # Uncomment if using PostgreSQL
-  # postgres-data:
+# Uncomment volumes section if using PostgreSQL
+# volumes:
+#   postgres-data:
