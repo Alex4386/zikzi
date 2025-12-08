@@ -77,3 +77,11 @@ func GetUserID(c *gin.Context) string {
 	}
 	return ""
 }
+
+// IsAdmin is a helper to safely check if the user is an admin
+func IsAdmin(c *gin.Context) bool {
+	if isAdmin, exists := c.Get("is_admin"); exists {
+		return isAdmin.(bool)
+	}
+	return false
+}

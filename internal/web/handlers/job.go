@@ -93,7 +93,7 @@ func (h *JobHandler) ListJobs(c *gin.Context) {
 
 // GetJob returns a specific print job
 // @Summary Get print job
-// @Description Get details of a specific print job
+// @Description Get details of a specific print job (admins can access any job)
 // @Tags jobs
 // @Produce json
 // @Security BearerAuth
@@ -104,10 +104,20 @@ func (h *JobHandler) ListJobs(c *gin.Context) {
 // @Router /jobs/{id} [get]
 func (h *JobHandler) GetJob(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
 	jobID := c.Param("id")
 
 	var job models.PrintJob
-	if err := h.db.Where("id = ? AND user_id = ?", jobID, userID).First(&job).Error; err != nil {
+	query := h.db.Preload("User")
+	if isAdmin {
+		// Admin can access any job
+		query = query.Where("id = ?", jobID)
+	} else {
+		// Regular users can only access their own jobs
+		query = query.Where("id = ? AND user_id = ?", jobID, userID)
+	}
+
+	if err := query.First(&job).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
 		return
 	}
@@ -117,7 +127,7 @@ func (h *JobHandler) GetJob(c *gin.Context) {
 
 // DownloadJob downloads the original PostScript file
 // @Summary Download original file
-// @Description Download the original PostScript file for a print job
+// @Description Download the original PostScript file for a print job (admins can access any job)
 // @Tags jobs
 // @Produce application/octet-stream
 // @Security BearerAuth
@@ -128,10 +138,18 @@ func (h *JobHandler) GetJob(c *gin.Context) {
 // @Router /jobs/{id}/download [get]
 func (h *JobHandler) DownloadJob(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
 	jobID := c.Param("id")
 
 	var job models.PrintJob
-	if err := h.db.Where("id = ? AND user_id = ?", jobID, userID).First(&job).Error; err != nil {
+	query := h.db
+	if isAdmin {
+		query = query.Where("id = ?", jobID)
+	} else {
+		query = query.Where("id = ? AND user_id = ?", jobID, userID)
+	}
+
+	if err := query.First(&job).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
 		return
 	}
@@ -146,7 +164,7 @@ func (h *JobHandler) DownloadJob(c *gin.Context) {
 
 // DownloadPDF downloads the converted PDF file
 // @Summary Download PDF
-// @Description Download the converted PDF file for a print job
+// @Description Download the converted PDF file for a print job (admins can access any job)
 // @Tags jobs
 // @Produce application/pdf
 // @Security BearerAuth
@@ -157,10 +175,18 @@ func (h *JobHandler) DownloadJob(c *gin.Context) {
 // @Router /jobs/{id}/pdf [get]
 func (h *JobHandler) DownloadPDF(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
 	jobID := c.Param("id")
 
 	var job models.PrintJob
-	if err := h.db.Where("id = ? AND user_id = ?", jobID, userID).First(&job).Error; err != nil {
+	query := h.db
+	if isAdmin {
+		query = query.Where("id = ?", jobID)
+	} else {
+		query = query.Where("id = ? AND user_id = ?", jobID, userID)
+	}
+
+	if err := query.First(&job).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
 		return
 	}
@@ -175,7 +201,7 @@ func (h *JobHandler) DownloadPDF(c *gin.Context) {
 
 // GetThumbnail returns the thumbnail image for a print job
 // @Summary Get thumbnail
-// @Description Get the thumbnail image for a print job
+// @Description Get the thumbnail image for a print job (admins can access any job)
 // @Tags jobs
 // @Produce image/png
 // @Security BearerAuth
@@ -186,10 +212,18 @@ func (h *JobHandler) DownloadPDF(c *gin.Context) {
 // @Router /jobs/{id}/thumbnail [get]
 func (h *JobHandler) GetThumbnail(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
 	jobID := c.Param("id")
 
 	var job models.PrintJob
-	if err := h.db.Where("id = ? AND user_id = ?", jobID, userID).First(&job).Error; err != nil {
+	query := h.db
+	if isAdmin {
+		query = query.Where("id = ?", jobID)
+	} else {
+		query = query.Where("id = ? AND user_id = ?", jobID, userID)
+	}
+
+	if err := query.First(&job).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
 		return
 	}
@@ -204,7 +238,7 @@ func (h *JobHandler) GetThumbnail(c *gin.Context) {
 
 // DeleteJob deletes a print job and its associated files
 // @Summary Delete print job
-// @Description Delete a print job and its associated files
+// @Description Delete a print job and its associated files (admins can delete any job)
 // @Tags jobs
 // @Produce json
 // @Security BearerAuth
@@ -215,10 +249,18 @@ func (h *JobHandler) GetThumbnail(c *gin.Context) {
 // @Router /jobs/{id} [delete]
 func (h *JobHandler) DeleteJob(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
 	jobID := c.Param("id")
 
 	var job models.PrintJob
-	if err := h.db.Where("id = ? AND user_id = ?", jobID, userID).First(&job).Error; err != nil {
+	query := h.db
+	if isAdmin {
+		query = query.Where("id = ?", jobID)
+	} else {
+		query = query.Where("id = ? AND user_id = ?", jobID, userID)
+	}
+
+	if err := query.First(&job).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
 		return
 	}
