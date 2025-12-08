@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2, Network, Loader2, Wifi } from 'lucide-react'
 import { api } from '@/lib/api'
+import { PageContainer } from '@/components/PageContainer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -58,7 +59,7 @@ export default function IPAddresses() {
   }
 
   return (
-    <div className="p-6">
+    <PageContainer>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">IP Addresses</h1>
@@ -199,6 +200,6 @@ export default function IPAddresses() {
           </Table>
         </Card>
       )}
-    </div>
+    </PageContainer>
   )
 }

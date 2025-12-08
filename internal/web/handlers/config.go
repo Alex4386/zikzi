@@ -22,6 +22,8 @@ type ConfigResponse struct {
 	PrinterExternalHostname string `json:"printer_external_hostname" example:"printer.example.com"`
 	IPPPort                 int    `json:"ipp_port" example:"631"`
 	RawPort                 int    `json:"raw_port" example:"9100"`
+	AllowLocal              bool   `json:"allow_local" example:"true"`
+	SSOEnabled              bool   `json:"sso_enabled" example:"false"`
 }
 
 // GetPublicConfig returns public configuration
@@ -36,5 +38,7 @@ func (h *ConfigHandler) GetPublicConfig(c *gin.Context) {
 		PrinterExternalHostname: h.config.Printer.ExternalHostname,
 		IPPPort:                 h.config.IPP.Port,
 		RawPort:                 h.config.Printer.Port,
+		AllowLocal:              h.config.Auth.AllowLocal,
+		SSOEnabled:              h.config.Auth.OIDC.Enabled,
 	})
 }

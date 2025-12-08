@@ -72,6 +72,7 @@ function App() {
           <Route path="admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="admin/jobs" element={<AdminRoute><AdminJobs /></AdminRoute>} />
           <Route path="admin/orphaned" element={<AdminRoute><OrphanedJobs /></AdminRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </AuthProvider>

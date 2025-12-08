@@ -103,11 +103,30 @@ class Api {
       throw new Error(error.error || 'Download failed')
     }
 
-    const blob = await response.blob()
+    const contentType = response.headers.get('Content-Type') || (type === 'pdf' ? 'application/pdf' : 'application/octet-stream')
+    const data = await response.arrayBuffer()
+    const blob = new Blob([data], { type: contentType })
+
+    // Determine extension from content type or type parameter
+    let extension = type === 'pdf' ? 'pdf' : 'ps'
+    if (contentType.includes('postscript')) {
+      extension = 'ps'
+    } else if (contentType.includes('pdf')) {
+      extension = 'pdf'
+    }
+
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = filename || `job-${id}.${type === 'pdf' ? 'pdf' : 'bin'}`
+
+    const fallbackName = `job-${id}.${extension}`
+    a.download = filename || fallbackName
+
+    // check if a.download has invalid names
+    if (/[\/\\?%*:|"<>]/.test(a.download)) {
+      a.download = fallbackName
+    }
+
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

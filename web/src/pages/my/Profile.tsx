@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Save, CheckCircle, Key } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
+import { PageContainer } from '@/components/PageContainer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -65,10 +66,10 @@ export default function Profile() {
   }
 
   return (
-    <div className="p-6">
+    <PageContainer>
       <h1 className="text-2xl font-bold mb-6">Profile & Security</h1>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Your Information</CardTitle>
@@ -199,6 +200,6 @@ export default function Profile() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   )
 }

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Shield, User, Plus, Pencil, Trash2, Key } from 'lucide-react'
 import { api, AdminUser } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
+import { PageContainer } from '@/components/PageContainer'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -135,7 +136,7 @@ export default function AdminUsers() {
   const isPending = createMutation.isPending || updateMutation.isPending || passwordMutation.isPending || deleteMutation.isPending
 
   return (
-    <div className="p-6">
+    <PageContainer>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Users</h1>
         <Button onClick={openCreate}>
@@ -339,6 +340,6 @@ export default function AdminUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   )
 }

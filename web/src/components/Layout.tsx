@@ -1,7 +1,14 @@
+import { useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { Printer, Network, LogOut, FileText, User, ChevronUp } from 'lucide-react'
+import { Printer, Network, LogOut, FileText, User, ChevronUp, ChevronDown, Sun, Moon, Monitor } from 'lucide-react'
 import { Shield, Users, AlertTriangle, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/components/theme-provider'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   Sidebar,
   SidebarContent,
@@ -22,13 +29,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
 export default function Layout() {
   const { user, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
+  const [adminOpen, setAdminOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -83,26 +95,33 @@ export default function Layout() {
           </SidebarGroup>
 
           {user?.is_admin && (
-            <SidebarGroup>
-              <SidebarGroupLabel>
-                <Shield className="mr-2 h-4 w-4" />
-                Admin
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminItems.map(({ to, icon: Icon, label }) => (
-                    <SidebarMenuItem key={to}>
-                      <SidebarMenuButton asChild isActive={isActive(to)} tooltip={label}>
-                        <NavLink to={to}>
-                          <Icon />
-                          <span>{label}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
+              <SidebarGroup>
+                <CollapsibleTrigger asChild>
+                  <SidebarGroupLabel className="cursor-pointer hover:bg-sidebar-accent rounded-md transition-colors">
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
+                    <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${adminOpen ? 'rotate-180' : ''}`} />
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {adminItems.map(({ to, icon: Icon, label }) => (
+                        <SidebarMenuItem key={to}>
+                          <SidebarMenuButton asChild isActive={isActive(to)} tooltip={label}>
+                            <NavLink to={to}>
+                              <Icon />
+                              <span>{label}</span>
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
           )}
         </SidebarContent>
 
@@ -125,6 +144,32 @@ export default function Layout() {
                     <User className="mr-2 h-4 w-4" />
                     Profile & Security
                   </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      {theme === 'light' ? (
+                        <Sun className="mr-2 h-4 w-4" />
+                      ) : theme === 'dark' ? (
+                        <Moon className="mr-2 h-4 w-4" />
+                      ) : (
+                        <Monitor className="mr-2 h-4 w-4" />
+                      )}
+                      Theme
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => setTheme('light')}>
+                        <Sun className="mr-2 h-4 w-4" />
+                        Light
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTheme('dark')}>
+                        <Moon className="mr-2 h-4 w-4" />
+                        Dark
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTheme('system')}>
+                        <Monitor className="mr-2 h-4 w-4" />
+                        System
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />

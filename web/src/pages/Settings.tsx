@@ -1,7 +1,8 @@
 import { Printer, Download } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { PageContainer } from '@/components/PageContainer'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { useQuery } from '@tanstack/react-query'
 import {
   generateWindowsScript,
   generateMacScript,
@@ -44,10 +45,11 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-6 max-w-2xl">
+    <PageContainer>
       <h1 className="text-2xl font-bold mb-6">Printer Setup</h1>
 
-      <Card className="mb-6">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
@@ -110,7 +112,8 @@ export default function Settings() {
             macOS/Linux: Run <code>chmod +x</code> then execute the script
           </p>
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </PageContainer>
   )
 }

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Download, Trash2, FileText, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { formatBytes, formatDate } from '@/lib/utils'
+import { PageContainer } from '@/components/PageContainer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -87,7 +88,7 @@ export default function JobDetail() {
   const StatusIcon = status.icon
 
   return (
-    <div className="p-6 max-w-4xl">
+    <PageContainer className="max-w-4xl">
       <Button
         variant="ghost"
         onClick={() => navigate('/')}
@@ -126,7 +127,7 @@ export default function JobDetail() {
             </Alert>
           )}
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Source IP</h3>
               <p>{job.source_ip}</p>
@@ -186,6 +187,6 @@ export default function JobDetail() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   )
 }

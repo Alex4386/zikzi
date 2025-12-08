@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { Users, FileText, Calendar, BookOpen, AlertTriangle, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { PageContainer } from '@/components/PageContainer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Link } from 'react-router-dom'
 
 export default function AdminDashboard() {
   const { data: stats, isLoading, error } = useQuery({
@@ -61,10 +62,10 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="p-6">
+    <PageContainer>
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {statCards.map((stat) => {
           const Icon = stat.icon
           const content = (
@@ -90,6 +91,6 @@ export default function AdminDashboard() {
           return <div key={stat.title}>{content}</div>
         })}
       </div>
-    </div>
+    </PageContainer>
   )
 }

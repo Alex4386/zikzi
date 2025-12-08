@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { FileText, CheckCircle, Clock, AlertCircle, Loader2, User } from 'lucide-react'
+import { FileText, CheckCircle, Clock, AlertCircle, Loader2, User, LayoutGrid, List } from 'lucide-react'
 import { api, AdminJob } from '@/lib/api'
 import { formatBytes, formatDate } from '@/lib/utils'
+import { PageContainer } from '@/components/PageContainer'
+import { JobThumbnail } from '@/components/JobThumbnail'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -22,6 +24,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
 
 const statusIcons = {
   received: Clock,
@@ -41,6 +47,7 @@ export default function AdminJobs() {
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [userFilter, setUserFilter] = useState<string>('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
   const { data: users } = useQuery({
     queryKey: ['admin', 'users'],
@@ -58,10 +65,18 @@ export default function AdminJobs() {
   })
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <PageContainer>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold">All Jobs</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as 'grid' | 'table')}>
+            <ToggleGroupItem value="grid" aria-label="Grid view">
+              <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="table" aria-label="Table view">
+              <List className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
           <Select
             value={userFilter}
             onValueChange={(value) => {
@@ -69,7 +84,7 @@ export default function AdminJobs() {
               setPage(1)
             }}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by user" />
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +103,7 @@ export default function AdminJobs() {
               setPage(1)
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -115,12 +130,55 @@ export default function AdminJobs() {
           <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p>No jobs found</p>
         </div>
+      ) : viewMode === 'grid' ? (
+        <>
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {data?.jobs.map((job: AdminJob) => {
+              const StatusIcon = statusIcons[job.status]
+              return (
+                <Card key={job.id} className="overflow-hidden group">
+                  <Link to={`/jobs/${job.id}`}>
+                    <JobThumbnail jobId={job.id} jobStatus={job.status} documentName={job.document_name} size="lg" />
+                  </Link>
+                  <CardContent className="p-3">
+                    <Link to={`/jobs/${job.id}`} className="hover:text-primary">
+                      <p className="font-medium text-sm truncate" title={job.document_name || 'Untitled'}>
+                        {job.document_name || 'Untitled'}
+                      </p>
+                    </Link>
+                    <div className="flex items-center justify-between mt-2">
+                      <Badge variant={statusVariants[job.status]} className="gap-1 text-xs">
+                        <StatusIcon className={`h-3 w-3 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
+                        <span className="capitalize">{job.status}</span>
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{formatBytes(job.file_size)}</span>
+                    </div>
+                    {job.user ? (
+                      <p className="text-xs text-muted-foreground mt-1 truncate flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {job.user.display_name}
+                      </p>
+                    ) : (
+                      <Badge variant="outline" className="text-yellow-600 text-xs mt-1">
+                        Orphaned
+                      </Badge>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
+                      {formatDate(job.created_at)}
+                    </p>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </>
       ) : (
         <>
           <Card>
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[60px]"></TableHead>
                   <TableHead>Document</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Source</TableHead>
@@ -135,6 +193,11 @@ export default function AdminJobs() {
                   const StatusIcon = statusIcons[job.status]
                   return (
                     <TableRow key={job.id}>
+                      <TableCell>
+                        <Link to={`/jobs/${job.id}`}>
+                          <JobThumbnail jobId={job.id} jobStatus={job.status} documentName={job.document_name} size="sm" />
+                        </Link>
+                      </TableCell>
                       <TableCell>
                         <Link to={`/jobs/${job.id}`} className="hover:text-primary">
                           <p className="font-medium">{job.document_name || 'Untitled'}</p>
@@ -178,34 +241,34 @@ export default function AdminJobs() {
               </TableBody>
             </Table>
           </Card>
-
-          {data && data.total > 20 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, data.total)} of {data.total}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page * 20 >= data.total}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
         </>
       )}
-    </div>
+
+      {data && data.total > 20 && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-sm text-muted-foreground">
+            Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, data.total)} of {data.total}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page * 20 >= data.total}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </PageContainer>
   )
 }

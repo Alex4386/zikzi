@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { FileText, Download, Trash2, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react'
+import { FileText, Download, Trash2, CheckCircle, Clock, AlertCircle, Loader2, LayoutGrid, List } from 'lucide-react'
 import { api, PrintJob } from '@/lib/api'
 import { formatBytes, formatDate } from '@/lib/utils'
+import { PageContainer } from '@/components/PageContainer'
+import { JobThumbnail } from '@/components/JobThumbnail'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -22,6 +24,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
 
 const statusIcons = {
   received: Clock,
@@ -40,6 +46,7 @@ const statusVariants = {
 export default function Dashboard() {
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
@@ -74,27 +81,37 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <PageContainer>
+      <div className="flex items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-bold">Print Jobs</h1>
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => {
-            setStatusFilter(value)
-            setPage(1)
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="received">Received</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-3">
+          <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as 'grid' | 'table')}>
+            <ToggleGroupItem value="grid" aria-label="Grid view">
+              <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="table" aria-label="Table view">
+              <List className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value)
+              setPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="received">Received</SelectItem>
+              <SelectItem value="processing">Processing</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (
@@ -111,6 +128,72 @@ export default function Dashboard() {
           <p>No print jobs yet</p>
           <p className="text-sm mt-2">Send a document to port 9100 to get started</p>
         </div>
+      ) : viewMode === 'grid' ? (
+        <>
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {data?.jobs.map((job) => {
+              const StatusIcon = statusIcons[job.status]
+              return (
+                <Card key={job.id} className="overflow-hidden group">
+                  <Link to={`/jobs/${job.id}`}>
+                    <JobThumbnail jobId={job.id} jobStatus={job.status} documentName={job.document_name} size="lg" />
+                  </Link>
+                  <CardContent className="p-3">
+                    <Link to={`/jobs/${job.id}`} className="hover:text-primary">
+                      <p className="font-medium text-sm truncate" title={job.document_name || 'Untitled'}>
+                        {job.document_name || 'Untitled'}
+                      </p>
+                    </Link>
+                    <div className="flex items-center justify-between mt-2">
+                      <Badge variant={statusVariants[job.status]} className="gap-1 text-xs">
+                        <StatusIcon className={`h-3 w-3 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
+                        <span className="capitalize">{job.status}</span>
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{formatBytes(job.file_size)}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
+                      {formatDate(job.created_at)}
+                    </p>
+                    <div className="flex items-center justify-end gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {job.status === 'completed' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            handleDownload(job)
+                          }}
+                          disabled={downloadingJobId === job.id}
+                          title="Download PDF"
+                        >
+                          {downloadingJobId === job.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          handleDelete(job)
+                        }}
+                        disabled={deleteMutation.isPending}
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </>
       ) : (
         <>
           <Card>
@@ -189,34 +272,34 @@ export default function Dashboard() {
               </TableBody>
             </Table>
           </Card>
-
-          {data && data.total > 20 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, data.total)} of {data.total}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page * 20 >= data.total}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
         </>
       )}
-    </div>
+
+      {data && data.total > 20 && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-sm text-muted-foreground">
+            Showing {(page - 1) * 20 + 1} to {Math.min(page * 20, data.total)} of {data.total}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page * 20 >= data.total}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </PageContainer>
   )
 }
