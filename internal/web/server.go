@@ -138,29 +138,56 @@ func (s *Server) setupRoutes() {
 
 	// Swagger documentation
 	s.router.GET("/docs", func(c *gin.Context) {
-		c.Redirect(http.StatusMovedPermanently, "/docs/index.html")
+		c.Redirect(http.StatusFound, "/docs/index.html")
 	})
 	s.router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Serve embedded static files (WebUI)
 	staticContent, err := fs.Sub(staticFS, "static")
 	if err == nil {
-		s.router.StaticFS("/ui", http.FS(staticContent))
+		staticFS := http.FS(staticContent)
 
-		// SPA fallback - serve index.html for unmatched routes under /ui
-		s.router.NoRoute(func(c *gin.Context) {
-			// Only handle /ui paths
-			if len(c.Request.URL.Path) >= 3 && c.Request.URL.Path[:3] == "/ui" {
-				c.FileFromFS("index.html", http.FS(staticContent))
+		// Handle all /ui paths with a single handler
+		s.router.GET("/ui/*filepath", func(c *gin.Context) {
+			filepath := c.Param("filepath")
+
+			// Remove leading slash for file lookup
+			if len(filepath) > 0 && filepath[0] == '/' {
+				filepath = filepath[1:]
+			}
+
+			// Default to index.html for empty path
+			if filepath == "" {
+				filepath = "index.html"
+			}
+
+			// Try to open the file
+			f, err := staticContent.Open(filepath)
+			if err == nil {
+				f.Close()
+				// File exists, serve it
+				c.FileFromFS(filepath, staticFS)
 				return
 			}
+
+			// File doesn't exist - serve index.html for SPA routing
+			c.FileFromFS("index.html", staticFS)
+		})
+
+		// Handle /ui without trailing path
+		s.router.GET("/ui", func(c *gin.Context) {
+			c.Redirect(http.StatusFound, "/ui/")
+		})
+
+		// NoRoute fallback for paths not under /ui
+		s.router.NoRoute(func(c *gin.Context) {
 			c.JSON(404, gin.H{"error": "not found"})
 		})
 	}
 
 	// Redirect root to UI
 	s.router.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusMovedPermanently, "/ui/")
+		c.Redirect(http.StatusFound, "/ui/")
 	})
 }
 
