@@ -385,8 +385,48 @@ func (s *IPPServer) handleGetJobs(msg *goipp.Message, clientIP string) *goipp.Me
 
 // handleGetJobAttributes returns attributes for a specific job
 func (s *IPPServer) handleGetJobAttributes(msg *goipp.Message) *goipp.Message {
-	// For simplicity, return basic job info
-	return s.makeResponse(goipp.StatusOk, msg.RequestID)
+	// Extract job-uri or job-id from request
+	var jobID string
+	for _, attr := range msg.Operation {
+		if attr.Name == "job-uri" && len(attr.Values) > 0 {
+			if str, ok := attr.Values[0].V.(goipp.String); ok {
+				// Extract job ID from URI (e.g., "ipp://host/ipp/print/jobs/uuid")
+				uri := string(str)
+				if idx := strings.LastIndex(uri, "/"); idx != -1 {
+					jobID = uri[idx+1:]
+				}
+			}
+		}
+	}
+
+	if jobID == "" {
+		return s.makeResponse(goipp.StatusErrorBadRequest, msg.RequestID)
+	}
+
+	// Look up job in database
+	var job models.PrintJob
+	if err := s.db.Where("id = ?", jobID).First(&job).Error; err != nil {
+		return s.makeResponse(goipp.StatusErrorNotFound, msg.RequestID)
+	}
+
+	resp := s.makeResponse(goipp.StatusOk, msg.RequestID)
+
+	// Add job attributes
+	jobState := s.getIPPJobState(job.Status)
+	jobURI := fmt.Sprintf("%s/jobs/%s", s.printerURI, job.ID)
+
+	resp.Job.Add(goipp.MakeAttribute("job-id", goipp.TagInteger, goipp.Integer(1)))
+	resp.Job.Add(goipp.MakeAttribute("job-uri", goipp.TagURI, goipp.String(jobURI)))
+	resp.Job.Add(goipp.MakeAttribute("job-state", goipp.TagEnum, goipp.Integer(jobState)))
+	resp.Job.Add(goipp.MakeAttribute("job-state-reasons", goipp.TagKeyword, goipp.String(s.getJobStateReason(job.Status))))
+	resp.Job.Add(goipp.MakeAttribute("job-name", goipp.TagName, goipp.String(job.DocumentName)))
+	resp.Job.Add(goipp.MakeAttribute("job-originating-user-name", goipp.TagName, goipp.String(job.Hostname)))
+
+	if job.PageCount > 0 {
+		resp.Job.Add(goipp.MakeAttribute("job-media-sheets-completed", goipp.TagInteger, goipp.Integer(job.PageCount)))
+	}
+
+	return resp
 }
 
 // handleCancelJob cancels a print job
@@ -477,6 +517,22 @@ func (s *IPPServer) getIPPJobState(status string) int {
 		return 8 // aborted
 	default:
 		return 3 // pending
+	}
+}
+
+// getJobStateReason returns the IPP job-state-reasons keyword
+func (s *IPPServer) getJobStateReason(status string) string {
+	switch status {
+	case models.JobStatusReceived:
+		return "job-incoming"
+	case models.JobStatusProcessing:
+		return "job-printing"
+	case models.JobStatusCompleted:
+		return "job-completed-successfully"
+	case models.JobStatusFailed:
+		return "job-aborted-by-system"
+	default:
+		return "none"
 	}
 }
 

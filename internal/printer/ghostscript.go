@@ -29,6 +29,12 @@ func (gs *GhostScript) ConvertToPDF(inputPath, outputPath string) error {
 		"-sDEVICE=pdfwrite",
 		"-dCompatibilityLevel=1.4",
 		"-dPDFSETTINGS=/prepress",
+		"-dColorConversionStrategy=/LeaveColorUnchanged",
+		"-dDownsampleMonoImages=false",
+		"-dDownsampleGrayImages=false",
+		"-dDownsampleColorImages=false",
+		"-dAutoFilterColorImages=false",
+		"-dAutoFilterGrayImages=false",
 		fmt.Sprintf("-sOutputFile=%s", outputPath),
 		inputPath,
 	}

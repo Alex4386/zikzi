@@ -20,6 +20,8 @@ func NewConfigHandler(cfg *config.Config) *ConfigHandler {
 // ConfigResponse represents public configuration
 type ConfigResponse struct {
 	PrinterExternalHostname string `json:"printer_external_hostname" example:"printer.example.com"`
+	IPPPort                 int    `json:"ipp_port" example:"631"`
+	RawPort                 int    `json:"raw_port" example:"9100"`
 }
 
 // GetPublicConfig returns public configuration
@@ -32,5 +34,7 @@ type ConfigResponse struct {
 func (h *ConfigHandler) GetPublicConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, ConfigResponse{
 		PrinterExternalHostname: h.config.Printer.ExternalHostname,
+		IPPPort:                 h.config.IPP.Port,
+		RawPort:                 h.config.Printer.Port,
 	})
 }
