@@ -158,24 +158,24 @@ export default function JobDetail() {
 
           <div className="flex gap-3 pt-4 border-t">
             {job.status === 'completed' && (
-              <>
-                <Button onClick={() => handleDownload('pdf')} disabled={downloading !== null}>
-                  {downloading === 'pdf' ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-2" />
-                  )}
-                  {t('jobDetail.downloadPdf')}
-                </Button>
-                <Button variant="secondary" onClick={() => handleDownload('original')} disabled={downloading !== null}>
-                  {downloading === 'original' ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-2" />
-                  )}
-                  {t('jobDetail.downloadOriginal')}
-                </Button>
-              </>
+              <Button onClick={() => handleDownload('pdf')} disabled={downloading !== null}>
+                {downloading === 'pdf' ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {t('jobDetail.downloadPdf')}
+              </Button>
+            )}
+            {(job.status === 'completed' || job.status === 'failed') && (
+              <Button variant="secondary" onClick={() => handleDownload('original')} disabled={downloading !== null}>
+                {downloading === 'original' ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {t('jobDetail.downloadOriginal')}
+              </Button>
             )}
             <Button
               variant="destructive"
