@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, Network, Loader2, Wifi } from 'lucide-react'
 import { api } from '@/lib/api'
 import { PageContainer } from '@/components/PageContainer'
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/table'
 
 export default function IPAddresses() {
+  const { t } = useTranslation()
   const [showForm, setShowForm] = useState(false)
   const [ipAddress, setIpAddress] = useState('')
   const [description, setDescription] = useState('')
@@ -62,27 +64,27 @@ export default function IPAddresses() {
     <PageContainer>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">IP Addresses</h1>
+          <h1 className="text-2xl font-bold">{t('ipAddresses.title')}</h1>
           <p className="text-muted-foreground mt-1">
-            Register your IP addresses to automatically associate print jobs with your account
+            {t('ipAddresses.description')}
           </p>
         </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add IP
+          {t('ipAddresses.addIp')}
         </Button>
       </div>
 
       {showForm && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Register New IP Address</CardTitle>
-            <CardDescription>Add an IP address to link print jobs to your account</CardDescription>
+            <CardTitle>{t('ipAddresses.add.title')}</CardTitle>
+            <CardDescription>{t('ipAddresses.add.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="ipAddress">IP Address</Label>
+                <Label htmlFor="ipAddress">{t('ipAddresses.ipAddress')}</Label>
                 <div className="flex gap-2">
                   <Input
                     id="ipAddress"
@@ -100,25 +102,25 @@ export default function IPAddresses() {
                     disabled={detectMutation.isPending}
                   >
                     <Wifi className="h-4 w-4 mr-2" />
-                    {detectMutation.isPending ? 'Detecting...' : 'Detect My IP'}
+                    {detectMutation.isPending ? t('ipAddresses.add.detecting') : t('ipAddresses.add.detectMyIp')}
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description (optional)</Label>
+                <Label htmlFor="description">{t('common.description')} ({t('common.description').toLowerCase()})</Label>
                 <Input
                   id="description"
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g., Office Desktop, Home Laptop"
+                  placeholder={t('ipAddresses.labelPlaceholder')}
                 />
               </div>
 
               <div className="flex gap-3">
                 <Button type="submit" disabled={addMutation.isPending}>
-                  {addMutation.isPending ? 'Adding...' : 'Add IP Address'}
+                  {addMutation.isPending ? t('common.adding') : t('ipAddresses.add.addIpAddress')}
                 </Button>
                 <Button
                   type="button"
@@ -129,14 +131,14 @@ export default function IPAddresses() {
                     setDescription('')
                   }}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
               </div>
 
               {addMutation.error && (
                 <Alert variant="destructive">
                   <AlertDescription>
-                    {addMutation.error instanceof Error ? addMutation.error.message : 'Failed to add IP'}
+                    {addMutation.error instanceof Error ? addMutation.error.message : t('common.failedToAdd')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -152,19 +154,19 @@ export default function IPAddresses() {
       ) : ips?.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Network className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>No IP addresses registered</p>
-          <p className="text-sm mt-2">Add an IP to automatically link print jobs to your account</p>
+          <p>{t('ipAddresses.noAddresses')}</p>
+          <p className="text-sm mt-2">{t('ipAddresses.noAddressesHint')}</p>
         </div>
       ) : (
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Added</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('ipAddresses.ipAddress')}</TableHead>
+                <TableHead>{t('common.description')}</TableHead>
+                <TableHead>{t('common.status')}</TableHead>
+                <TableHead>{t('common.added')}</TableHead>
+                <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -174,7 +176,7 @@ export default function IPAddresses() {
                   <TableCell className="text-muted-foreground">{ip.description || '-'}</TableCell>
                   <TableCell>
                     <Badge variant={ip.is_active ? 'success' : 'secondary'}>
-                      {ip.is_active ? 'Active' : 'Inactive'}
+                      {ip.is_active ? t('common.active') : t('common.inactive')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
@@ -185,7 +187,7 @@ export default function IPAddresses() {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        if (confirm('Remove this IP address?')) {
+                        if (confirm(t('ipAddresses.delete.confirm'))) {
                           deleteMutation.mutate(ip.id)
                         }
                       }}

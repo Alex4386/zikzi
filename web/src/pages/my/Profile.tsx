@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Save, CheckCircle, Key } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
@@ -11,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function Profile() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [displayName, setDisplayName] = useState(user?.display_name || '')
   const [email, setEmail] = useState(user?.email || '')
@@ -55,11 +57,11 @@ export default function Profile() {
     e.preventDefault()
     setPasswordError(null)
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match')
+      setPasswordError(t('profile.passwordsDoNotMatch'))
       return
     }
     if (newPassword.length < 8) {
-      setPasswordError('Password must be at least 8 characters')
+      setPasswordError(t('profile.passwordTooShort'))
       return
     }
     passwordMutation.mutate()
@@ -67,18 +69,18 @@ export default function Profile() {
 
   return (
     <PageContainer>
-      <h1 className="text-2xl font-bold mb-6">Profile & Security</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('profile.title')}</h1>
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Your Information</CardTitle>
-            <CardDescription>Update your display name and email address</CardDescription>
+            <CardTitle>{t('profile.yourInfo')}</CardTitle>
+            <CardDescription>{t('profile.yourInfoDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t('auth.username')}</Label>
                 <Input
                   id="username"
                   type="text"
@@ -86,11 +88,11 @@ export default function Profile() {
                   disabled
                   className="bg-muted"
                 />
-                <p className="text-xs text-muted-foreground">Username cannot be changed</p>
+                <p className="text-xs text-muted-foreground">{t('profile.usernameCannotChange')}</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
+                <Label htmlFor="displayName">{t('auth.displayName')}</Label>
                 <Input
                   id="displayName"
                   type="text"
@@ -100,7 +102,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -112,13 +114,13 @@ export default function Profile() {
               <div className="flex items-center gap-3">
                 <Button type="submit" disabled={updateMutation.isPending}>
                   <Save className="h-4 w-4 mr-2" />
-                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateMutation.isPending ? t('common.saving') : t('profile.saveChanges')}
                 </Button>
 
                 {saved && (
                   <span className="flex items-center gap-2 text-green-500">
                     <CheckCircle className="h-4 w-4" />
-                    Saved
+                    {t('common.saved')}
                   </span>
                 )}
               </div>
@@ -126,7 +128,7 @@ export default function Profile() {
               {updateMutation.error && (
                 <Alert variant="destructive">
                   <AlertDescription>
-                    {updateMutation.error instanceof Error ? updateMutation.error.message : 'Failed to save'}
+                    {updateMutation.error instanceof Error ? updateMutation.error.message : t('common.failedToSave')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -136,13 +138,13 @@ export default function Profile() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>Update your password to keep your account secure</CardDescription>
+            <CardTitle>{t('profile.changePassword')}</CardTitle>
+            <CardDescription>{t('profile.changePasswordDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
+                <Label htmlFor="currentPassword">{t('profile.currentPassword')}</Label>
                 <Input
                   id="currentPassword"
                   type="password"
@@ -153,7 +155,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">{t('profile.newPassword')}</Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -162,11 +164,11 @@ export default function Profile() {
                   required
                   minLength={8}
                 />
-                <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
+                <p className="text-xs text-muted-foreground">{t('profile.passwordMinLength')}</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">{t('profile.confirmPassword')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -180,13 +182,13 @@ export default function Profile() {
               <div className="flex items-center gap-3">
                 <Button type="submit" disabled={passwordMutation.isPending}>
                   <Key className="h-4 w-4 mr-2" />
-                  {passwordMutation.isPending ? 'Changing...' : 'Change Password'}
+                  {passwordMutation.isPending ? t('profile.changing') : t('profile.changePassword')}
                 </Button>
 
                 {passwordSaved && (
                   <span className="flex items-center gap-2 text-green-500">
                     <CheckCircle className="h-4 w-4" />
-                    Password changed
+                    {t('profile.passwordUpdated')}
                   </span>
                 )}
               </div>

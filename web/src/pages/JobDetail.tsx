@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Download, Trash2, FileText, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { formatBytes, formatDate } from '@/lib/utils'
@@ -18,6 +19,7 @@ const statusConfig = {
 }
 
 export default function JobDetail() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -38,7 +40,7 @@ export default function JobDetail() {
   })
 
   const handleDelete = () => {
-    if (confirm('Delete this print job?')) {
+    if (confirm(t('jobDetail.deleteConfirm'))) {
       deleteMutation.mutate()
     }
   }
@@ -75,10 +77,10 @@ export default function JobDetail() {
           className="mb-6"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Back
+          {t('common.back')}
         </Button>
         <div className="text-center py-12 text-destructive">
-          Job not found
+          {t('jobDetail.notFound')}
         </div>
       </div>
     )
@@ -95,7 +97,7 @@ export default function JobDetail() {
         className="mb-6"
       >
         <ArrowLeft className="h-5 w-5 mr-2" />
-        Back to Jobs
+        {t('jobDetail.backToJobs')}
       </Button>
 
       <Card>
@@ -106,14 +108,14 @@ export default function JobDetail() {
                 <FileText className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl">{job.document_name || 'Untitled'}</CardTitle>
-                <p className="text-muted-foreground">{job.app_name || 'Unknown application'}</p>
+                <CardTitle className="text-2xl">{job.document_name || t('jobDetail.untitled')}</CardTitle>
+                <p className="text-muted-foreground">{job.app_name || t('jobDetail.unknownApp')}</p>
               </div>
             </div>
 
             <Badge variant={status.variant} className="gap-1">
               <StatusIcon className={`h-4 w-4 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
-              <span className="capitalize">{job.status}</span>
+              <span className="capitalize">{t(`jobs.status.${job.status}`)}</span>
             </Badge>
           </div>
         </CardHeader>
@@ -122,34 +124,34 @@ export default function JobDetail() {
           {job.error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>{t('common.error')}</AlertTitle>
               <AlertDescription>{job.error}</AlertDescription>
             </Alert>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">Source IP</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">{t('jobDetail.sourceIp')}</h3>
               <p>{job.source_ip}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">Hostname</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">{t('jobDetail.hostname')}</h3>
               <p>{job.hostname || '-'}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">File Size</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">{t('jobDetail.fileSize')}</h3>
               <p>{formatBytes(job.file_size)}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">Pages</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">{t('jobDetail.pages')}</h3>
               <p>{job.page_count || '-'}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">Received</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">{t('jobDetail.received')}</h3>
               <p>{formatDate(job.created_at)}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">Processed</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">{t('jobDetail.processed')}</h3>
               <p>{job.processed_at ? formatDate(job.processed_at) : '-'}</p>
             </div>
           </div>
@@ -163,7 +165,7 @@ export default function JobDetail() {
                   ) : (
                     <Download className="h-4 w-4 mr-2" />
                   )}
-                  Download PDF
+                  {t('jobDetail.downloadPdf')}
                 </Button>
                 <Button variant="secondary" onClick={() => handleDownload('original')} disabled={downloading !== null}>
                   {downloading === 'original' ? (
@@ -171,7 +173,7 @@ export default function JobDetail() {
                   ) : (
                     <Download className="h-4 w-4 mr-2" />
                   )}
-                  Download Original
+                  {t('jobDetail.downloadOriginal')}
                 </Button>
               </>
             )}
@@ -182,7 +184,7 @@ export default function JobDetail() {
               className="ml-auto"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              {t('common.delete')}
             </Button>
           </div>
         </CardContent>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Loader2, Shield, User, Plus, Pencil, Trash2, Key } from 'lucide-react'
 import { api, AdminUser } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
@@ -30,6 +31,7 @@ import {
 type DialogMode = 'create' | 'edit' | 'password' | 'delete' | null
 
 export default function AdminUsers() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
@@ -138,10 +140,10 @@ export default function AdminUsers() {
   return (
     <PageContainer>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Users</h1>
+        <h1 className="text-2xl font-bold">{t('admin.users.title')}</h1>
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Add User
+          {t('admin.users.addUser')}
         </Button>
       </div>
 
@@ -151,24 +153,24 @@ export default function AdminUsers() {
         </div>
       ) : fetchError ? (
         <div className="text-center py-12 text-destructive">
-          Failed to load users
+          {t('admin.users.failedToLoad')}
         </div>
       ) : users?.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>No users found</p>
+          <p>{t('admin.users.noUsers')}</p>
         </div>
       ) : (
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Jobs</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('common.user')}</TableHead>
+                <TableHead>{t('admin.users.email')}</TableHead>
+                <TableHead>{t('common.role')}</TableHead>
+                <TableHead>{t('admin.users.jobCount')}</TableHead>
+                <TableHead>{t('admin.users.createdAt')}</TableHead>
+                <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -186,7 +188,7 @@ export default function AdminUsers() {
                   <TableCell className="text-sm">{user.email}</TableCell>
                   <TableCell>
                     <Badge variant={user.is_admin ? 'default' : 'secondary'}>
-                      {user.is_admin ? 'Admin' : 'User'}
+                      {user.is_admin ? t('common.admin') : t('common.user')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">{user.job_count}</TableCell>
@@ -195,13 +197,13 @@ export default function AdminUsers() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(user)} title="Edit user">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(user)} title={t('admin.users.editUser')}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openPassword(user)} title="Change password">
+                      <Button variant="ghost" size="icon" onClick={() => openPassword(user)} title={t('admin.users.changePassword')}>
                         <Key className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openDelete(user)} title="Delete user" className="text-destructive hover:text-destructive">
+                      <Button variant="ghost" size="icon" onClick={() => openDelete(user)} title={t('admin.users.deleteUser')} className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -217,11 +219,11 @@ export default function AdminUsers() {
       <Dialog open={dialogMode === 'create' || dialogMode === 'edit'} onOpenChange={() => closeDialog()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{dialogMode === 'create' ? 'Add User' : 'Edit User'}</DialogTitle>
+            <DialogTitle>{dialogMode === 'create' ? t('admin.users.addUser') : t('admin.users.editUser')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t('admin.users.username')}</Label>
               <Input
                 id="username"
                 value={username}
@@ -230,7 +232,7 @@ export default function AdminUsers() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('admin.users.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -240,7 +242,7 @@ export default function AdminUsers() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="displayName">Display Name</Label>
+              <Label htmlFor="displayName">{t('admin.users.displayName')}</Label>
               <Input
                 id="displayName"
                 value={displayName}
@@ -249,7 +251,7 @@ export default function AdminUsers() {
             </div>
             {dialogMode === 'create' && (
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('admin.users.password')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -266,7 +268,7 @@ export default function AdminUsers() {
                 checked={isAdmin}
                 onCheckedChange={(checked: boolean) => setIsAdmin(checked === true)}
               />
-              <Label htmlFor="isAdmin" className="cursor-pointer">Administrator</Label>
+              <Label htmlFor="isAdmin" className="cursor-pointer">{t('admin.users.isAdmin')}</Label>
             </div>
             {error && (
               <Alert variant="destructive">
@@ -274,9 +276,9 @@ export default function AdminUsers() {
               </Alert>
             )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? 'Saving...' : dialogMode === 'create' ? 'Create' : 'Save'}
+                {isPending ? t('common.saving') : dialogMode === 'create' ? t('common.create') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>
@@ -287,11 +289,11 @@ export default function AdminUsers() {
       <Dialog open={dialogMode === 'password'} onOpenChange={() => closeDialog()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Change Password for {selectedUser?.display_name}</DialogTitle>
+            <DialogTitle>{t('admin.users.changePasswordFor', { name: selectedUser?.display_name })}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword">{t('admin.users.newPassword')}</Label>
               <Input
                 id="newPassword"
                 type="password"
@@ -300,7 +302,7 @@ export default function AdminUsers() {
                 required
                 minLength={8}
               />
-              <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
+              <p className="text-xs text-muted-foreground">{t('profile.passwordMinLength')}</p>
             </div>
             {error && (
               <Alert variant="destructive">
@@ -308,9 +310,9 @@ export default function AdminUsers() {
               </Alert>
             )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? 'Saving...' : 'Change Password'}
+                {isPending ? t('common.saving') : t('admin.users.changePassword')}
               </Button>
             </DialogFooter>
           </form>
@@ -321,11 +323,10 @@ export default function AdminUsers() {
       <Dialog open={dialogMode === 'delete'} onOpenChange={() => closeDialog()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>{t('admin.users.deleteUser')}</DialogTitle>
           </DialogHeader>
           <p className="py-4">
-            Are you sure you want to delete <strong>{selectedUser?.display_name}</strong> (@{selectedUser?.username})?
-            This action cannot be undone.
+            {t('admin.users.deleteConfirm', { name: selectedUser?.display_name, username: selectedUser?.username })}
           </p>
           {error && (
             <Alert variant="destructive">
@@ -333,9 +334,9 @@ export default function AdminUsers() {
             </Alert>
           )}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
             <Button variant="destructive" onClick={() => deleteMutation.mutate()} disabled={isPending}>
-              {isPending ? 'Deleting...' : 'Delete'}
+              {isPending ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

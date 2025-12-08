@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Printer, AlertCircle, Sun, Moon } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/components/theme-provider'
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function Register() {
+  const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -34,12 +36,12 @@ export default function Register() {
     setError('')
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      setError(t('auth.passwordsDoNotMatch'))
       return
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+      setError(t('auth.passwordMinLength'))
       return
     }
 
@@ -65,7 +67,7 @@ export default function Register() {
       >
         <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        <span className="sr-only">Toggle theme</span>
+        <span className="sr-only">{t('common.toggleTheme')}</span>
       </Button>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -73,13 +75,13 @@ export default function Register() {
             <Printer className="h-16 w-16 text-primary" />
           </div>
           <h1 className="text-3xl font-bold">Zikzi</h1>
-          <p className="text-muted-foreground mt-2">Create your account</p>
+          <p className="text-muted-foreground mt-2">{t('auth.createAccount')}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Get started</CardTitle>
-            <CardDescription>Create a new account to use Zikzi</CardDescription>
+            <CardTitle>{t('auth.getStarted')}</CardTitle>
+            <CardDescription>{t('auth.createAccountSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -91,7 +93,7 @@ export default function Register() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t('auth.username')}</Label>
                 <Input
                   type="text"
                   id="username"
@@ -102,7 +104,7 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <Input
                   type="email"
                   id="email"
@@ -113,7 +115,7 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
+                <Label htmlFor="displayName">{t('auth.displayName')}</Label>
                 <Input
                   type="text"
                   id="displayName"
@@ -123,7 +125,7 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <Input
                   type="password"
                   id="password"
@@ -135,7 +137,7 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                 <Input
                   type="password"
                   id="confirmPassword"
@@ -146,16 +148,16 @@ export default function Register() {
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating account...' : 'Create account'}
+                {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
               </Button>
             </form>
           </CardContent>
         </Card>
 
         <p className="text-center mt-4 text-muted-foreground">
-          Already have an account?{' '}
+          {t('auth.hasAccount')}{' '}
           <Link to="/login" className="text-primary hover:underline">
-            Sign in
+            {t('auth.signIn')}
           </Link>
         </p>
       </div>

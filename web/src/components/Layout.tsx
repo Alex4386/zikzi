@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { Printer, Network, LogOut, FileText, User, ChevronUp, ChevronDown, Sun, Moon, Monitor } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Printer, Network, LogOut, FileText, User, ChevronUp, ChevronDown, Sun, Moon, Monitor, Languages } from 'lucide-react'
 import { Shield, Users, AlertTriangle, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/components/theme-provider'
+import { languages, setLanguage, LanguageCode } from '@/i18n'
 import {
   Collapsible,
   CollapsibleContent,
@@ -36,6 +38,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export default function Layout() {
+  const { t, i18n } = useTranslation()
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
@@ -48,16 +51,16 @@ export default function Layout() {
   }
 
   const navItems = [
-    { to: '/', icon: FileText, label: 'Print Jobs' },
-    { to: '/ips', icon: Network, label: 'IP Addresses' },
-    { to: '/settings', icon: Printer, label: 'Printer Setup' },
+    { to: '/', icon: FileText, label: t('nav.printJobs') },
+    { to: '/ips', icon: Network, label: t('nav.ipAddresses') },
+    { to: '/settings', icon: Printer, label: t('nav.settings') },
   ]
 
   const adminItems = [
-    { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/admin/users', icon: Users, label: 'Users' },
-    { to: '/admin/jobs', icon: FileText, label: 'All Jobs' },
-    { to: '/admin/orphaned', icon: AlertTriangle, label: 'Orphaned Jobs' },
+    { to: '/admin', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { to: '/admin/users', icon: Users, label: t('nav.users') },
+    { to: '/admin/jobs', icon: FileText, label: t('nav.allJobs') },
+    { to: '/admin/orphaned', icon: AlertTriangle, label: t('nav.orphanedJobs') },
   ]
 
   const isActive = (to: string) => {
@@ -100,7 +103,7 @@ export default function Layout() {
                 <CollapsibleTrigger asChild>
                   <SidebarGroupLabel className="cursor-pointer hover:bg-sidebar-accent rounded-md transition-colors">
                     <Shield className="mr-2 h-4 w-4" />
-                    Admin
+                    {t('nav.admin')}
                     <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${adminOpen ? 'rotate-180' : ''}`} />
                   </SidebarGroupLabel>
                 </CollapsibleTrigger>
@@ -142,7 +145,7 @@ export default function Layout() {
                 <DropdownMenuContent side="top" align="start" className="w-56">
                   <DropdownMenuItem onClick={() => navigate('/my/profile')}>
                     <User className="mr-2 h-4 w-4" />
-                    Profile & Security
+                    {t('common.profile')}
                   </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
@@ -153,27 +156,45 @@ export default function Layout() {
                       ) : (
                         <Monitor className="mr-2 h-4 w-4" />
                       )}
-                      Theme
+                      {t('settings.appearance.theme')}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
                       <DropdownMenuItem onClick={() => setTheme('light')}>
                         <Sun className="mr-2 h-4 w-4" />
-                        Light
+                        {t('settings.appearance.light')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setTheme('dark')}>
                         <Moon className="mr-2 h-4 w-4" />
-                        Dark
+                        {t('settings.appearance.dark')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setTheme('system')}>
                         <Monitor className="mr-2 h-4 w-4" />
-                        System
+                        {t('settings.appearance.system')}
                       </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Languages className="mr-2 h-4 w-4" />
+                      {t('settings.language.title')}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {languages.map((lang) => (
+                        <DropdownMenuItem
+                          key={lang.code}
+                          onClick={() => setLanguage(lang.code as LanguageCode)}
+                        >
+                          <span className={i18n.language === lang.code ? 'font-medium' : ''}>
+                            {lang.nativeName}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
+                    {t('common.logout')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -1,5 +1,6 @@
 import { Printer, Download } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { PageContainer } from '@/components/PageContainer'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ interface Config {
 }
 
 export default function Settings() {
+  const { t } = useTranslation()
   const { data: config } = useQuery<Config>({
     queryKey: ['config'],
     queryFn: async () => {
@@ -46,7 +48,7 @@ export default function Settings() {
 
   return (
     <PageContainer>
-      <h1 className="text-2xl font-bold mb-6">Printer Setup</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('settings.title')}</h1>
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         <Card>
@@ -56,27 +58,27 @@ export default function Settings() {
               <Printer className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle>Connect Your Printer</CardTitle>
-              <CardDescription>Add a RAW PostScript printer pointing to this server</CardDescription>
+              <CardTitle>{t('settings.printer.connectTitle')}</CardTitle>
+              <CardDescription>{t('settings.printer.connectDescription')}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-muted rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">RAW Socket Address</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('settings.printer.rawSocketAddress')}</p>
             <code className="text-lg font-mono text-primary">
               socket://{printerHostname}:{rawPort}
             </code>
           </div>
 
           <div className="space-y-2 text-sm">
-            <p className="font-medium">Manual Setup Instructions:</p>
+            <p className="font-medium">{t('settings.printer.manualSetup')}</p>
             <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-              <li>Open your system's printer settings</li>
-              <li>Add a new printer → TCP/IP or Socket printer</li>
-              <li>Enter hostname: <code>{printerHostname}</code>, port: <code>{rawPort}</code></li>
-              <li>Select "Generic PostScript Printer" or "Raw" as the driver</li>
-              <li>Register your IP address in the "IP Addresses" tab</li>
+              <li>{t('settings.printer.step1')}</li>
+              <li>{t('settings.printer.step2')}</li>
+              <li>{t('settings.printer.step3', { hostname: printerHostname, port: rawPort })}</li>
+              <li>{t('settings.printer.step4')}</li>
+              <li>{t('settings.printer.step5')}</li>
             </ol>
           </div>
         </CardContent>
@@ -89,27 +91,27 @@ export default function Settings() {
               <Download className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle>Automatic Setup</CardTitle>
-              <CardDescription>Download a script to automatically configure the printer</CardDescription>
+              <CardTitle>{t('settings.printer.automaticSetup')}</CardTitle>
+              <CardDescription>{t('settings.printer.automaticSetupDescription')}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <Button onClick={handleDownloadWindows} variant="outline" className="w-full justify-start">
             <Download className="h-4 w-4 mr-2" />
-            Download for Windows (.bat)
+            {t('settings.printer.downloadWindows')}
           </Button>
           <Button onClick={handleDownloadMac} variant="outline" className="w-full justify-start">
             <Download className="h-4 w-4 mr-2" />
-            Download for macOS (.command)
+            {t('settings.printer.downloadMac')}
           </Button>
           <Button onClick={handleDownloadLinux} variant="outline" className="w-full justify-start">
             <Download className="h-4 w-4 mr-2" />
-            Download for Linux (.sh)
+            {t('settings.printer.downloadLinux')}
           </Button>
           <p className="text-xs text-muted-foreground mt-2">
-            Windows: Right-click and "Run as administrator"<br />
-            macOS/Linux: Run <code>chmod +x</code> then execute the script
+            {t('settings.printer.windowsNote')}<br />
+            {t('settings.printer.macLinuxNote')}
           </p>
         </CardContent>
         </Card>

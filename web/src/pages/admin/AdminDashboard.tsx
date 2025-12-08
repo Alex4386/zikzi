@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Users, FileText, Calendar, BookOpen, AlertTriangle, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { PageContainer } from '@/components/PageContainer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function AdminDashboard() {
+  const { t } = useTranslation()
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: () => api.getAdminStats(),
@@ -23,7 +25,7 @@ export default function AdminDashboard() {
     return (
       <div className="p-6">
         <div className="text-center py-12 text-destructive">
-          Failed to load admin stats
+          {t('admin.dashboard.failedToLoad')}
         </div>
       </div>
     )
@@ -31,29 +33,29 @@ export default function AdminDashboard() {
 
   const statCards = [
     {
-      title: 'Total Users',
+      title: t('admin.dashboard.stats.totalUsers'),
       value: stats?.total_users ?? 0,
       icon: Users,
       link: '/admin/users',
     },
     {
-      title: 'Total Jobs',
+      title: t('admin.dashboard.stats.totalJobs'),
       value: stats?.total_jobs ?? 0,
       icon: FileText,
       link: '/admin/jobs',
     },
     {
-      title: 'Jobs Today',
+      title: t('admin.dashboard.stats.jobsToday'),
       value: stats?.jobs_today ?? 0,
       icon: Calendar,
     },
     {
-      title: 'Total Pages',
+      title: t('admin.dashboard.stats.totalPages'),
       value: stats?.total_pages ?? 0,
       icon: BookOpen,
     },
     {
-      title: 'Orphaned Jobs',
+      title: t('admin.dashboard.stats.orphanedJobs'),
       value: stats?.orphaned_jobs ?? 0,
       icon: AlertTriangle,
       link: '/admin/orphaned',
@@ -63,7 +65,7 @@ export default function AdminDashboard() {
 
   return (
     <PageContainer>
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('admin.dashboard.title')}</h1>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {statCards.map((stat) => {

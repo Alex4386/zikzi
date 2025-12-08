@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Printer, AlertCircle, Sun, Moon } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
@@ -17,6 +18,7 @@ interface Config {
 }
 
 export default function Login() {
+  const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -63,7 +65,7 @@ export default function Login() {
   if (configLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('common.loading')}</div>
       </div>
     )
   }
@@ -78,7 +80,7 @@ export default function Login() {
       >
         <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        <span className="sr-only">Toggle theme</span>
+        <span className="sr-only">{t('common.toggleTheme')}</span>
       </Button>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -86,18 +88,18 @@ export default function Login() {
             <Printer className="h-16 w-16 text-primary" />
           </div>
           <h1 className="text-3xl font-bold">Zikzi</h1>
-          <p className="text-muted-foreground mt-2">Sign in to your account</p>
+          <p className="text-muted-foreground mt-2">{t('auth.signInSubtitle')}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Welcome back</CardTitle>
+            <CardTitle>{t('auth.welcomeBack')}</CardTitle>
             <CardDescription>
               {allowLocal && ssoEnabled
-                ? 'Enter your credentials or use SSO to continue'
+                ? t('auth.enterCredentialsOrSSO')
                 : allowLocal
-                  ? 'Enter your credentials to continue'
-                  : 'Use SSO to continue'}
+                  ? t('auth.enterCredentials')
+                  : t('auth.useSSO')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -112,7 +114,7 @@ export default function Login() {
               {allowLocal && (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
+                    <Label htmlFor="username">{t('auth.username')}</Label>
                     <Input
                       type="text"
                       id="username"
@@ -123,7 +125,7 @@ export default function Login() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t('auth.password')}</Label>
                     <Input
                       type="password"
                       id="password"
@@ -134,7 +136,7 @@ export default function Login() {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Signing in...' : 'Sign in'}
+                    {isLoading ? t('auth.signInLoading') : t('auth.signIn')}
                   </Button>
                 </form>
               )}
@@ -145,14 +147,14 @@ export default function Login() {
                     <Separator />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">or</span>
+                    <span className="bg-card px-2 text-muted-foreground">{t('common.or')}</span>
                   </div>
                 </div>
               )}
 
               {ssoEnabled && (
                 <Button variant={allowLocal ? 'secondary' : 'default'} className="w-full" asChild>
-                  <a href="/api/v1/auth/oidc/login">Sign in with SSO</a>
+                  <a href="/api/v1/auth/oidc/login">{t('auth.signInWithSSO')}</a>
                 </Button>
               )}
 
@@ -160,7 +162,7 @@ export default function Login() {
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    No authentication methods are configured. Please contact your administrator.
+                    {t('auth.noAuthMethods')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -170,9 +172,9 @@ export default function Login() {
 
         {allowLocal && (
           <p className="text-center mt-4 text-muted-foreground">
-            Don't have an account?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/register" className="text-primary hover:underline">
-              Sign up
+              {t('auth.signUp')}
             </Link>
           </p>
         )}

@@ -11,7 +11,6 @@ import (
 // @contact.name Zikzi
 // @license.name MIT
 
-// @host localhost:8080
 // @BasePath /api/v1
 
 // @securityDefinitions.apikey BearerAuth
