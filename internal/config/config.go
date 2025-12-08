@@ -52,13 +52,14 @@ type AuthConfig struct {
 }
 
 type OIDCConfig struct {
-	Enabled         bool      `mapstructure:"enabled"`
-	ProviderURL     string    `mapstructure:"provider_url"`
-	ClientID        string    `mapstructure:"client_id"`
-	ClientSecret    string    `mapstructure:"client_secret"`
-	RedirectURL     string    `mapstructure:"redirect_url"`
-	AutoCreateUsers bool      `mapstructure:"auto_create_users"` // Create new users on first OIDC login
-	ACL             ACLConfig `mapstructure:"acl"`
+	Enabled         bool              `mapstructure:"enabled"`
+	ProviderURL     string            `mapstructure:"provider_url"`
+	ClientID        string            `mapstructure:"client_id"`
+	ClientSecret    string            `mapstructure:"client_secret"`
+	RedirectURL     string            `mapstructure:"redirect_url"`
+	AutoCreateUsers bool              `mapstructure:"auto_create_users"` // Create new users on first OIDC login
+	ExtraFlags      []string          `mapstructure:"extra_flags"`       // Extra query params for auth URL (e.g., "hd=example.com")
+	ACL             ACLConfig         `mapstructure:"acl"`
 }
 
 type ACLConfig struct {

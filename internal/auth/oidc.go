@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -88,7 +89,15 @@ func (p *OIDCProvider) GenerateAuthURL(redirectAfterLogin string) (string, strin
 	// Clean up old states periodically
 	go p.cleanupOldStates()
 
-	url := p.oauth2Config.AuthCodeURL(state)
+	// Build auth URL with extra flags
+	var opts []oauth2.AuthCodeOption
+	for _, flag := range p.config.ExtraFlags {
+		if key, value, ok := strings.Cut(flag, "="); ok {
+			opts = append(opts, oauth2.SetAuthURLParam(key, value))
+		}
+	}
+
+	url := p.oauth2Config.AuthCodeURL(state, opts...)
 	return url, state, nil
 }
 
