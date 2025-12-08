@@ -21,8 +21,8 @@ type User struct {
 	PasswordHash string `json:"-"`
 
 	// OIDC fields
-	OIDCSubject  string `gorm:"index" json:"-"`
-	OIDCProvider string `json:"-"`
+	OIDCSubject  string `gorm:"column:oidc_subject;index" json:"-"`
+	OIDCProvider string `gorm:"column:oidc_provider" json:"-"`
 
 	// Relations
 	PrintJobs       []PrintJob       `gorm:"foreignKey:UserID" json:"-"`
