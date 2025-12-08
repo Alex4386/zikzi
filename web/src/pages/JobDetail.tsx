@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Download, Trash2, FileText, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react'
@@ -19,6 +20,7 @@ export default function JobDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [downloading, setDownloading] = useState<'pdf' | 'original' | null>(null)
 
   const { data: job, isLoading, error } = useQuery({
     queryKey: ['job', id],
@@ -37,6 +39,21 @@ export default function JobDetail() {
   const handleDelete = () => {
     if (confirm('Delete this print job?')) {
       deleteMutation.mutate()
+    }
+  }
+
+  const handleDownload = async (type: 'pdf' | 'original') => {
+    if (!job) return
+    setDownloading(type)
+    try {
+      const filename = type === 'pdf'
+        ? `${job.document_name || 'document'}.pdf`
+        : job.document_name || 'document'
+      await api.downloadJob(job.id, type, filename)
+    } catch (err) {
+      console.error('Download failed:', err)
+    } finally {
+      setDownloading(null)
     }
   }
 
@@ -139,17 +156,21 @@ export default function JobDetail() {
           <div className="flex gap-3 pt-4 border-t">
             {job.status === 'completed' && (
               <>
-                <Button asChild>
-                  <a href={api.getJobDownloadUrl(job.id, 'pdf')}>
+                <Button onClick={() => handleDownload('pdf')} disabled={downloading !== null}>
+                  {downloading === 'pdf' ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
                     <Download className="h-4 w-4 mr-2" />
-                    Download PDF
-                  </a>
+                  )}
+                  Download PDF
                 </Button>
-                <Button variant="secondary" asChild>
-                  <a href={api.getJobDownloadUrl(job.id, 'original')}>
+                <Button variant="secondary" onClick={() => handleDownload('original')} disabled={downloading !== null}>
+                  {downloading === 'original' ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
                     <Download className="h-4 w-4 mr-2" />
-                    Download Original
-                  </a>
+                  )}
+                  Download Original
                 </Button>
               </>
             )}

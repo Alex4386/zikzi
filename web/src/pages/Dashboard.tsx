@@ -40,6 +40,7 @@ const statusVariants = {
 export default function Dashboard() {
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading, error } = useQuery({
@@ -57,6 +58,18 @@ export default function Dashboard() {
   const handleDelete = (job: PrintJob) => {
     if (confirm(`Delete "${job.document_name || 'Untitled'}"?`)) {
       deleteMutation.mutate(job.id)
+    }
+  }
+
+  const handleDownload = async (job: PrintJob) => {
+    setDownloadingJobId(job.id)
+    try {
+      const filename = `${job.document_name || 'document'}.pdf`
+      await api.downloadJob(job.id, 'pdf', filename)
+    } catch (err) {
+      console.error('Download failed:', err)
+    } finally {
+      setDownloadingJobId(null)
     }
   }
 
@@ -146,10 +159,18 @@ export default function Dashboard() {
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
                           {job.status === 'completed' && (
-                            <Button variant="ghost" size="icon" asChild>
-                              <a href={api.getJobDownloadUrl(job.id, 'pdf')} title="Download PDF">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDownload(job)}
+                              disabled={downloadingJobId === job.id}
+                              title="Download PDF"
+                            >
+                              {downloadingJobId === job.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
                                 <Download className="h-4 w-4" />
-                              </a>
+                              )}
                             </Button>
                           )}
                           <Button

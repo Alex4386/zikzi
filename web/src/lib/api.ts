@@ -88,6 +88,32 @@ class Api {
     return `${API_BASE}/jobs/${id}/${path}`
   }
 
+  async downloadJob(id: string, type: 'original' | 'pdf', filename?: string): Promise<void> {
+    const path = type === 'original' ? 'download' : type
+    const headers: Record<string, string> = {}
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`
+    }
+
+    const response = await fetch(`${API_BASE}/jobs/${id}/${path}`, { headers })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Download failed' }))
+      throw new Error(error.error || 'Download failed')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename || `job-${id}.${type === 'pdf' ? 'pdf' : 'bin'}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+  }
+
   // IPs
   getIPs() {
     return this.request<IPRegistration[]>('/ips')
