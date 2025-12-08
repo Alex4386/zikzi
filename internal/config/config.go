@@ -24,10 +24,12 @@ type WebConfig struct {
 }
 
 type PrinterConfig struct {
-	Port                 int    `mapstructure:"port"`
-	Host                 string `mapstructure:"host"`
-	AllowUnregisteredIPs bool   `mapstructure:"allow_unregistered_ips"`
-	ExternalHostname     string `mapstructure:"external_hostname"` // External hostname for printer access (e.g., "printer.example.com")
+	Port                 int      `mapstructure:"port"`
+	Host                 string   `mapstructure:"host"`
+	AllowUnregisteredIPs bool     `mapstructure:"allow_unregistered_ips"`
+	ExternalHostname     string   `mapstructure:"external_hostname"`  // External hostname for printer access (e.g., "printer.example.com")
+	ProxyProtocol        bool     `mapstructure:"proxy_protocol"`     // Enable PROXY protocol v1/v2 support
+	TrustedProxies       []string `mapstructure:"trusted_proxies"`    // List of trusted proxy IPs/CIDRs for PROXY protocol
 }
 
 type IPPConfig struct {

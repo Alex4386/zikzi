@@ -13,6 +13,7 @@ import (
 	"github.com/alex4386/zikzi/internal/config"
 	"github.com/alex4386/zikzi/internal/logger"
 	"github.com/alex4386/zikzi/internal/models"
+	proxyproto "github.com/pires/go-proxyproto"
 	"gorm.io/gorm"
 )
 
@@ -38,6 +39,13 @@ func (s *Server) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to start printer server: %w", err)
 	}
+
+	// Wrap listener with PROXY protocol support if enabled
+	if s.config.ProxyProtocol {
+		listener = s.wrapWithProxyProtocol(listener)
+		logger.Info("PROXY protocol v1/v2 enabled for RAW printer")
+	}
+
 	defer listener.Close()
 
 	logger.Info("PostScript printer server listening on %s", addr)
@@ -61,6 +69,59 @@ func (s *Server) Start(ctx context.Context) error {
 
 		go s.handleConnection(ctx, conn)
 	}
+}
+
+// wrapWithProxyProtocol wraps the listener with PROXY protocol support
+func (s *Server) wrapWithProxyProtocol(listener net.Listener) net.Listener {
+	policy := proxyproto.REQUIRE
+
+	// If trusted proxies are configured, create a policy function
+	if len(s.config.TrustedProxies) > 0 {
+		policy = proxyproto.USE
+	}
+
+	proxyListener := &proxyproto.Listener{
+		Listener:          listener,
+		Policy:            func(upstream net.Addr) (proxyproto.Policy, error) {
+			// If no trusted proxies configured, require PROXY protocol from everyone
+			if len(s.config.TrustedProxies) == 0 {
+				return proxyproto.REQUIRE, nil
+			}
+
+			// Check if the upstream is in trusted proxies list
+			tcpAddr, ok := upstream.(*net.TCPAddr)
+			if !ok {
+				return proxyproto.REJECT, nil
+			}
+
+			for _, trusted := range s.config.TrustedProxies {
+				_, cidr, err := net.ParseCIDR(trusted)
+				if err != nil {
+					// Not a CIDR, try as plain IP
+					if tcpAddr.IP.String() == trusted {
+						return proxyproto.USE, nil
+					}
+					continue
+				}
+				if cidr.Contains(tcpAddr.IP) {
+					return proxyproto.USE, nil
+				}
+			}
+
+			// Not from a trusted proxy - don't parse PROXY protocol, use direct IP
+			return proxyproto.IGNORE, nil
+		},
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
+	// Use simpler policy if no trusted proxies configured
+	if len(s.config.TrustedProxies) == 0 {
+		proxyListener.Policy = func(upstream net.Addr) (proxyproto.Policy, error) {
+			return policy, nil
+		}
+	}
+
+	return proxyListener
 }
 
 func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
