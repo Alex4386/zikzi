@@ -10,6 +10,7 @@ export interface PrinterDriver {
   name: string;
   driverName: string; // The exact string shown in the "Add Printer" wizard
   postInstall?: PrinterInstallHook;
+  installerUrl?: string;
 }
 
 const samsungSwitcherBuilder = (model: string): PrinterInstallHook => {
@@ -29,12 +30,14 @@ export const PRINTER_DRIVERS: PrinterDriver[] = [
     name: 'Samsung CLX-6240 Series PS (Universal)',
     driverName: 'Samsung Universal Print Driver 3 PS',
     postInstall: samsungSwitcherBuilder('CLX-6240'),
+    installerUrl: 'https://www.samsungsvc.co.kr/solution/38849',
   },
   {
     id: 'samsung-clx-6200-series-ps-upd3',
     name: 'Samsung CLX-6200 Series PS (Universal)',
     driverName: 'Samsung Universal Print Driver 3 PS',
     postInstall: samsungSwitcherBuilder('CLX-6200'),
+    installerUrl: 'https://www.samsungsvc.co.kr/solution/38849',
   },
   // ... other drivers
 ];
@@ -122,6 +125,10 @@ if (-not $DriverInstalled) {
     $Msg = "The printer driver '$DriverName' is not installed on this computer.\`n\`n" +
            "Please download and install the driver manually.\`n\`n" +
            "Once installed, run this script again."
+
+    ${driver.installerUrl ? `
+    $Msg += "\`n\`nYou can download it from:\`n${driver.installerUrl}\`n"
+    ` : ''}
     
     Show-UserPrompt $Msg
     
