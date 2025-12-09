@@ -205,9 +205,13 @@ func (s *Server) setupRoutes() {
 		// Handle all /ui paths with a single wildcard route
 		s.router.GET("/ui/*path", serveUI)
 
-		// Redirect /ui to /ui/ for consistent SPA routing
+		// Redirect /ui to /ui/ for consistent SPA routing (preserve query params)
 		s.router.GET("/ui", func(c *gin.Context) {
-			c.Redirect(http.StatusFound, "/ui/")
+			redirectURL := "/ui/"
+			if c.Request.URL.RawQuery != "" {
+				redirectURL += "?" + c.Request.URL.RawQuery
+			}
+			c.Redirect(http.StatusFound, redirectURL)
 		})
 	}
 
