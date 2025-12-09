@@ -1,19 +1,40 @@
+type PrinterInstallHook = (src: {
+  printerName: string;
+  portName: string;
+  hostname: string;
+  port: number;
+}) => string;
+
 export interface PrinterDriver {
   id: string;
   name: string;
   driverName: string; // The exact string shown in the "Add Printer" wizard
+  postInstall?: PrinterInstallHook;
 }
+
+const samsungSwitcherBuilder = (model: string): PrinterInstallHook => {
+  return ({ printerName }) => `
+$windir = "\${env:WINDIR}"
+Write-Host "Switching driver to ${model}..." -ForegroundColor Gray
+
+"$windir\\System32\\spool\\drivers\\x64\\3\\up00aa.exe" -switch "${printerName}" "${model}"
+Write-Host " [OK] Universal Driver Switched to ${model}." -ForegroundColor Green
+
+`
+};
 
 export const PRINTER_DRIVERS: PrinterDriver[] = [
   {
     id: 'samsung-clx-6240-series-ps-upd3',
     name: 'Samsung CLX-6240 Series PS (Universal)',
     driverName: 'Samsung Universal Print Driver 3 PS',
+    postInstall: samsungSwitcherBuilder('CLX-6240'),
   },
   {
     id: 'samsung-clx-6200-series-ps-upd3',
     name: 'Samsung CLX-6200 Series PS (Universal)',
     driverName: 'Samsung Universal Print Driver 3 PS',
+    postInstall: samsungSwitcherBuilder('CLX-6200'),
   },
   // ... other drivers
 ];
@@ -141,6 +162,12 @@ if (Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue) {
         exit 1
     }
 }
+
+${driver.postInstall ? `
+# --- Step 5: Post-Install Hook ---
+Write-Host "Running post-install configuration..." -ForegroundColor Yellow
+${driver.postInstall({ printerName: safePrinterName, portName, hostname, port })}
+` : ''}
 
 Write-Host ""
 Write-Host "Setup Complete." -ForegroundColor Cyan
