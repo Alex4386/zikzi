@@ -65,7 +65,7 @@ if %errorLevel% neq 0 (
 )
 
 :: Run the PowerShell logic below
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$f='%~f0'; $s=[IO.File]::ReadAllText($f); $s=$s.Substring($s.IndexOf('#>')+2); $t=[IO.Path]::GetTempFileName()+'.ps1'; [IO.File]::WriteAllText($t,$s); & $t; Remove-Item $t -ErrorAction SilentlyContinue"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$f='%~f0'; $s=[IO.File]::ReadAllText($f); $s=$s.Substring($s.IndexOf('#'+'>')+2); $t=[IO.Path]::GetTempFileName()+'.ps1'; [IO.File]::WriteAllText($t,$s); & $t; Remove-Item $t -ErrorAction SilentlyContinue"
 exit /b
 #>
 
