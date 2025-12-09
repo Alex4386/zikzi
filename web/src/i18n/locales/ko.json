@@ -201,7 +201,7 @@
       "step1": "시스템 프린터 설정을 엽니다",
       "step2": "새 프린터 추가 → TCP/IP 또는 소켓 프린터",
       "step3": "TCP/IP 주소: {{hostname}} 입력",
-      "step4": "드라이버로 \"Generic PostScript Printer\" 또는 \"Raw\"을 선택",
+      "step4": "드라이버로 \"PS\" 로 끝나는 PostScript 사용 드라이버 선택",
       "step5": "\"IP 주소\" 탭에서 IP 주소를 등록",
       "automaticSetup": "자동 설정",
       "automaticSetupDescription": "프린터를 자동으로 구성하는 스크립트를 다운로드하세요",
