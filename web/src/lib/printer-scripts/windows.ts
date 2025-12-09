@@ -127,7 +127,8 @@ if (-not $DriverInstalled) {
            "Once installed, run this script again."
 
     ${driver.installerUrl ? `
-    $Msg += "\`n\`nYou can download it from:\`n${driver.installerUrl}\`n"
+    $Msg += "\`n\`nThe Installer can be found following directions at:\`n${driver.installerUrl}\`n\`nLink to download the driver will open when you click OK."
+    Start-Process '${driver.installerUrl}'
     ` : ''}
     
     Show-UserPrompt $Msg
