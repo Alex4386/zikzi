@@ -146,11 +146,6 @@ func (s *Server) setupRoutes() {
 	// Serve embedded static files (WebUI)
 	staticContent, err := fs.Sub(staticFS, "static")
 	if err == nil {
-		// Serve index.html for /ui/ root
-		s.router.GET("/ui/", func(c *gin.Context) {
-			c.FileFromFS("index.html", http.FS(staticContent))
-		})
-
 		// Handle all /ui/* paths - serve static files or fallback to index.html for SPA
 		s.router.GET("/ui/*path", func(c *gin.Context) {
 			path := c.Param("path")
