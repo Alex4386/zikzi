@@ -90,9 +90,23 @@ func (h *IPHandler) RegisterIP(c *gin.Context) {
 		targetUserID = req.UserID
 	}
 
-	// Check if IP is already registered
+	// Check if IP is already registered (including soft-deleted records)
 	var existing models.IPRegistration
-	if err := h.db.Where("ip_address = ?", req.IPAddress).First(&existing).Error; err == nil {
+	if err := h.db.Unscoped().Where("ip_address = ?", req.IPAddress).First(&existing).Error; err == nil {
+		if existing.DeletedAt.Valid {
+			// Reactivate the soft-deleted record
+			existing.DeletedAt = gorm.DeletedAt{}
+			existing.UserID = targetUserID
+			existing.Description = req.Description
+			existing.IsActive = true
+			if err := h.db.Unscoped().Save(&existing).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register IP"})
+				return
+			}
+			h.db.Preload("User").First(&existing, "id = ?", existing.ID)
+			c.JSON(http.StatusCreated, existing)
+			return
+		}
 		c.JSON(http.StatusConflict, gin.H{"error": "IP address already registered"})
 		return
 	}

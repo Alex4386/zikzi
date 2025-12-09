@@ -72,4 +72,8 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Korean typography: prevent breaking words in the middle */
+  html[lang="ko"] {
+    word-break: keep-all;
+  }
 }

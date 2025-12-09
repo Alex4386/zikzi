@@ -6,6 +6,11 @@ import ko from './locales/ko.json'
 
 const savedLanguage = localStorage.getItem('zikzi-language') || navigator.language.split('-')[0] || 'en'
 
+// Update the HTML lang attribute
+function updateHtmlLang(lang: string) {
+  document.documentElement.lang = lang
+}
+
 i18n
   .use(initReactI18next)
   .init({
@@ -19,6 +24,14 @@ i18n
       escapeValue: false,
     },
   })
+
+// Set initial HTML lang attribute
+updateHtmlLang(savedLanguage)
+
+// Listen for language changes
+i18n.on('languageChanged', (lng) => {
+  updateHtmlLang(lng)
+})
 
 export default i18n
 
