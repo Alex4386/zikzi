@@ -32,8 +32,9 @@ type Server struct {
 func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	router := gin.Default()
 
-	// Disable automatic trailing slash redirect to prevent redirect loops
+	// Disable automatic redirects to prevent redirect loops
 	router.RedirectTrailingSlash = false
+	router.RedirectFixedPath = false
 
 	// Configure trusted proxies
 	if cfg.Web.TrustProxy {
@@ -150,6 +151,13 @@ func (s *Server) setupRoutes() {
 	// Serve embedded static files (WebUI)
 	staticContent, err := fs.Sub(staticFS, "static")
 	if err == nil {
+		// Read index.html once at startup
+		indexHTML, _ := fs.ReadFile(staticContent, "index.html")
+
+		serveIndex := func(c *gin.Context) {
+			c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
+		}
+
 		serveUI := func(c *gin.Context) {
 			// Get the path after /ui
 			fullPath := c.Request.URL.Path
@@ -158,18 +166,40 @@ func (s *Server) setupRoutes() {
 
 			// Empty path means /ui or /ui/ was requested
 			if path == "" {
-				c.FileFromFS("index.html", http.FS(staticContent))
+				serveIndex(c)
 				return
 			}
 			// Try to serve the static file
-			f, err := staticContent.Open(path)
+			data, err := fs.ReadFile(staticContent, path)
 			if err == nil {
-				f.Close()
-				c.FileFromFS(path, http.FS(staticContent))
+				// Determine content type
+				contentType := "application/octet-stream"
+				if strings.HasSuffix(path, ".html") {
+					contentType = "text/html; charset=utf-8"
+				} else if strings.HasSuffix(path, ".css") {
+					contentType = "text/css; charset=utf-8"
+				} else if strings.HasSuffix(path, ".js") {
+					contentType = "application/javascript; charset=utf-8"
+				} else if strings.HasSuffix(path, ".json") {
+					contentType = "application/json; charset=utf-8"
+				} else if strings.HasSuffix(path, ".png") {
+					contentType = "image/png"
+				} else if strings.HasSuffix(path, ".jpg") || strings.HasSuffix(path, ".jpeg") {
+					contentType = "image/jpeg"
+				} else if strings.HasSuffix(path, ".svg") {
+					contentType = "image/svg+xml"
+				} else if strings.HasSuffix(path, ".ico") {
+					contentType = "image/x-icon"
+				} else if strings.HasSuffix(path, ".woff") {
+					contentType = "font/woff"
+				} else if strings.HasSuffix(path, ".woff2") {
+					contentType = "font/woff2"
+				}
+				c.Data(http.StatusOK, contentType, data)
 				return
 			}
 			// Not a static file, serve index.html for SPA routing
-			c.FileFromFS("index.html", http.FS(staticContent))
+			serveIndex(c)
 		}
 
 		// Handle all /ui paths with a single wildcard route
