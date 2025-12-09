@@ -15,7 +15,7 @@ It is designed for:
 - Converts print jobs to PDF format using GhostScript.
 
 ## Installation
-TBD
+See [INSTALL.md](INSTALL.md) for detailed installation instructions.
 
 ## License
 [MIT License](LICENSE)
