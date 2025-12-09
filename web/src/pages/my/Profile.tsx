@@ -5,11 +5,11 @@ import { Save, CheckCircle, Key } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { api } from '@/lib/api'
 import { PageContainer } from '@/components/PageContainer'
+import { Note } from '@/components/Note'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function Profile() {
   const { t } = useTranslation()
@@ -126,11 +126,9 @@ export default function Profile() {
               </div>
 
               {updateMutation.error && (
-                <Alert variant="destructive">
-                  <AlertDescription>
-                    {updateMutation.error instanceof Error ? updateMutation.error.message : t('common.failedToSave')}
-                  </AlertDescription>
-                </Alert>
+                <Note variant="error">
+                  {updateMutation.error instanceof Error ? updateMutation.error.message : t('common.failedToSave')}
+                </Note>
               )}
             </form>
           </CardContent>
@@ -194,9 +192,9 @@ export default function Profile() {
               </div>
 
               {passwordError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{passwordError}</AlertDescription>
-                </Alert>
+                <Note variant="error">
+                  {passwordError}
+                </Note>
               )}
             </form>
           </CardContent>

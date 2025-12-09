@@ -6,10 +6,10 @@ import { ArrowLeft, Download, Trash2, FileText, CheckCircle, Clock, AlertCircle,
 import { api } from '@/lib/api'
 import { formatBytes, formatDate } from '@/lib/utils'
 import { PageContainer } from '@/components/PageContainer'
+import { Note } from '@/components/Note'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 const statusConfig = {
   received: { icon: Clock, variant: 'warning' as const },
@@ -122,11 +122,9 @@ export default function JobDetail() {
 
         <CardContent className="space-y-6">
           {job.error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{t('common.error')}</AlertTitle>
-              <AlertDescription>{job.error}</AlertDescription>
-            </Alert>
+            <Note variant="error" title={t('common.error')}>
+              {job.error}
+            </Note>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

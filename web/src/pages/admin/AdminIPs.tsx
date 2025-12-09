@@ -5,12 +5,12 @@ import { Loader2, Network, Plus, Pencil, Trash2, MapPin } from 'lucide-react'
 import { api, IPRegistration, AdminUser } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { PageContainer } from '@/components/PageContainer'
+import { Note } from '@/components/Note'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Table,
   TableBody,
@@ -270,9 +270,9 @@ export default function AdminIPs() {
               </Select>
             </div>
             {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <Note variant="error">
+                {error}
+              </Note>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
@@ -304,9 +304,9 @@ export default function AdminIPs() {
               />
             </div>
             {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <Note variant="error">
+                {error}
+              </Note>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
@@ -328,9 +328,9 @@ export default function AdminIPs() {
             {t('admin.ips.deleteConfirm', { ip: selectedIP?.ip_address })}
           </p>
           {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <Note variant="error">
+              {error}
+            </Note>
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>

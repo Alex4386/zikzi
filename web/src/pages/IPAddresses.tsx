@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, Network, Loader2, Wifi } from 'lucide-react'
 import { api } from '@/lib/api'
 import { PageContainer } from '@/components/PageContainer'
+import { Note } from '@/components/Note'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Table,
   TableBody,
@@ -136,11 +136,9 @@ export default function IPAddresses() {
               </div>
 
               {addMutation.error && (
-                <Alert variant="destructive">
-                  <AlertDescription>
-                    {addMutation.error instanceof Error ? addMutation.error.message : t('common.failedToAdd')}
-                  </AlertDescription>
-                </Alert>
+                <Note variant="error">
+                  {addMutation.error instanceof Error ? addMutation.error.message : t('common.failedToAdd')}
+                </Note>
               )}
             </form>
           </CardContent>

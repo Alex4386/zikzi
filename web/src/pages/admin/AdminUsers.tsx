@@ -5,13 +5,13 @@ import { Loader2, User, Plus, Pencil, Trash2, Key } from 'lucide-react'
 import { api, AdminUser } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { PageContainer } from '@/components/PageContainer'
+import { Note } from '@/components/Note'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Table,
   TableBody,
@@ -270,9 +270,9 @@ export default function AdminUsers() {
               <Label htmlFor="isAdmin" className="cursor-pointer">{t('admin.users.isAdmin')}</Label>
             </div>
             {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <Note variant="error">
+                {error}
+              </Note>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
@@ -304,9 +304,9 @@ export default function AdminUsers() {
               <p className="text-xs text-muted-foreground">{t('profile.passwordMinLength')}</p>
             </div>
             {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <Note variant="error">
+                {error}
+              </Note>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
@@ -328,9 +328,9 @@ export default function AdminUsers() {
             {t('admin.users.deleteConfirm', { name: selectedUser?.display_name, username: selectedUser?.username })}
           </p>
           {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <Note variant="error">
+              {error}
+            </Note>
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>

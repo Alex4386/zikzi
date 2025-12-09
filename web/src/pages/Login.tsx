@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Printer, AlertCircle, Sun, Moon } from 'lucide-react'
+import { Printer, Sun, Moon } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/components/theme-provider'
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Note } from '@/components/Note'
 import { Separator } from '@/components/ui/separator'
 
 interface Config {
@@ -105,10 +105,9 @@ export default function Login() {
           <CardContent>
             <div className="space-y-4">
               {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
+                <Note variant="error">
+                  {error}
+                </Note>
               )}
 
               {allowLocal && (
@@ -159,12 +158,9 @@ export default function Login() {
               )}
 
               {!allowLocal && !ssoEnabled && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    {t('auth.noAuthMethods')}
-                  </AlertDescription>
-                </Alert>
+                <Note variant="error">
+                  {t('auth.noAuthMethods')}
+                </Note>
               )}
             </div>
           </CardContent>
