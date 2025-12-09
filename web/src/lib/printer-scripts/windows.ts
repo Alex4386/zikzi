@@ -18,7 +18,7 @@ const samsungSwitcherBuilder = (model: string): PrinterInstallHook => {
 $windir = "\${env:WINDIR}"
 Write-Host "Switching driver to ${model}..." -ForegroundColor Gray
 
-"$windir\\System32\\spool\\drivers\\x64\\3\\up00aa.exe" -switch "${printerName}" "${model}"
+Start-Process -FilePath "$windir\\System32\\spool\\drivers\\x64\\3\\up00aa.exe" -ArgumentList "-switch", "${printerName}", "${model}" -Wait -NoNewWindow
 Write-Host " [OK] Universal Driver Switched to ${model}." -ForegroundColor Green
 
 `
@@ -65,7 +65,7 @@ if %errorLevel% neq 0 (
 )
 
 :: Run the PowerShell logic below
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Get-Content '%~f0' -Raw | Select-String -Pattern '^<# : batch portion' -Context 0,10000 | ForEach-Object { $_.Context.PostContext })"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$s = Get-Content -Raw '%~f0'; $s = $s.Substring($s.IndexOf('#>') + 2); Invoke-Expression $s"
 exit /b
 #>
 
