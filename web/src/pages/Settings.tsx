@@ -6,8 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import {
   generateWindowsScript,
-  generateMacScript,
-  generateLinuxScript,
   downloadScript,
 } from '@/lib/printer-scripts'
 
@@ -34,16 +32,6 @@ export default function Settings() {
   const handleDownloadWindows = () => {
     const script = generateWindowsScript(printerHostname, rawPort)
     downloadScript(script, 'setup-zikzi-printer.bat')
-  }
-
-  const handleDownloadMac = () => {
-    const script = generateMacScript(printerHostname, rawPort)
-    downloadScript(script, 'setup-zikzi-printer.command')
-  }
-
-  const handleDownloadLinux = () => {
-    const script = generateLinuxScript(printerHostname, rawPort)
-    downloadScript(script, 'setup-zikzi-printer.sh')
   }
 
   return (
@@ -101,16 +89,10 @@ export default function Settings() {
             <Download className="h-4 w-4 mr-2" />
             {t('settings.printer.downloadWindows')}
           </Button>
-          <Button onClick={handleDownloadMac} variant="outline" className="w-full justify-start">
-            <Download className="h-4 w-4 mr-2" />
-            {t('settings.printer.downloadMac')}
-          </Button>
-          <Button onClick={handleDownloadLinux} variant="outline" className="w-full justify-start">
-            <Download className="h-4 w-4 mr-2" />
-            {t('settings.printer.downloadLinux')}
-          </Button>
           <p className="text-xs text-muted-foreground mt-2">
-            {t('settings.printer.windowsNote')}<br />
+            {t('settings.printer.windowsNote')}
+          </p>
+          <p className="text-xs text-muted-foreground">
             {t('settings.printer.macLinuxNote')}
           </p>
         </CardContent>
