@@ -65,7 +65,7 @@ if %errorLevel% neq 0 (
 )
 
 :: Run the PowerShell logic below
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$s = Get-Content -Raw '%~f0'; $s = $s.Substring($s.IndexOf('#>') + 2); Invoke-Expression $s"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& { $s = [IO.File]::ReadAllText('%~f0'); $s = $s.Substring($s.IndexOf('#>') + 2); Invoke-Expression $s }"
 exit /b
 #>
 
