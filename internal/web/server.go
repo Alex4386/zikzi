@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"strings"
 
 	"github.com/alex4386/zikzi/internal/config"
 	"github.com/alex4386/zikzi/internal/logger"
@@ -150,11 +151,11 @@ func (s *Server) setupRoutes() {
 	staticContent, err := fs.Sub(staticFS, "static")
 	if err == nil {
 		serveUI := func(c *gin.Context) {
-			path := c.Param("path")
-			// Remove leading slash
-			if len(path) > 0 && path[0] == '/' {
-				path = path[1:]
-			}
+			// Get the path after /ui
+			fullPath := c.Request.URL.Path
+			path := strings.TrimPrefix(fullPath, "/ui")
+			path = strings.TrimPrefix(path, "/")
+
 			// Empty path means /ui or /ui/ was requested
 			if path == "" {
 				c.FileFromFS("index.html", http.FS(staticContent))
@@ -171,10 +172,8 @@ func (s *Server) setupRoutes() {
 			c.FileFromFS("index.html", http.FS(staticContent))
 		}
 
-		// Use a group with trailing slash handling disabled
-		ui := s.router.Group("/ui")
-		ui.GET("", serveUI)
-		ui.GET("/*path", serveUI)
+		// Handle all /ui paths with a single wildcard route
+		s.router.GET("/ui/*path", serveUI)
 	}
 
 	// Redirect root to UI
