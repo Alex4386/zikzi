@@ -84,7 +84,7 @@ export default function Settings() {
             <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
               <li>{t('settings.printer.step1')}</li>
               <li>{t('settings.printer.step2')}</li>
-              <li>{t('settings.printer.step3', { hostname: printerHostname, port: rawPort })}</li>
+              <li>{t('settings.printer.step3', { hostname: printerHostname })}</li>
               <li>{t('settings.printer.step4')}</li>
               <li>{t('settings.printer.step5')}</li>
             </ol>

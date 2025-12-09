@@ -2,15 +2,18 @@ export interface PrinterDriver {
   id: string;
   name: string;
   driverName: string; // The exact string shown in the "Add Printer" wizard
-  searchPattern: string; // (Kept for compatibility, but less critical with the new logic)
 }
 
 export const PRINTER_DRIVERS: PrinterDriver[] = [
   {
-    id: 'samsung-clx-6200-ps',
-    name: 'Samsung CLX-6200 Series PS',
-    driverName: 'Samsung CLX-6200 Series PS',
-    searchPattern: 'Samsung.*CLX.*6200.*PS',
+    id: 'samsung-clx-6240-series-ps-upd3',
+    name: 'Samsung CLX-6240 Series PS (Universal)',
+    driverName: 'Samsung Universal Print Driver 3 PS',
+  },
+  {
+    id: 'samsung-clx-6200-series-ps-upd3',
+    name: 'Samsung CLX-6200 Series PS (Universal)',
+    driverName: 'Samsung Universal Print Driver 3 PS',
   },
   // ... other drivers
 ];
@@ -62,7 +65,7 @@ function Show-UserPrompt {
 
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "      Zikzi Printer Setup Assistant         " -ForegroundColor Cyan
-Write-Host "============================================"
+Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
 # --- Step 1: Check Driver Status ---

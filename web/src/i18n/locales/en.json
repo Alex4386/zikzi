@@ -200,7 +200,7 @@
       "manualSetup": "Manual Setup Instructions:",
       "step1": "Open your system's printer settings",
       "step2": "Add a new printer → TCP/IP or Socket printer",
-      "step3": "Enter hostname: {{hostname}}, port: {{port}}",
+      "step3": "Enter hostname: {{hostname}}",
       "step4": "Select \"Generic PostScript Printer\" or \"Raw\" as the driver",
       "step5": "Register your IP address in the \"IP Addresses\" tab",
       "automaticSetup": "Automatic Setup",
