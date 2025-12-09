@@ -18,7 +18,7 @@ const samsungSwitcherBuilder = (model: string): PrinterInstallHook => {
 $windir = "\${env:WINDIR}"
 Write-Host "Switching driver to ${model}..." -ForegroundColor Gray
 
-Start-Process -FilePath "$windir\\System32\\spool\\drivers\\x64\\3\\up00aa.exe" -ArgumentList "-switch", "${printerName}", "${model}" -Wait -NoNewWindow
+& "$windir\\System32\\spool\\drivers\\x64\\3\\up00aa.exe" -switch "${printerName}" "${model}"
 Write-Host " [OK] Universal Driver Switched to ${model}." -ForegroundColor Green
 
 `
