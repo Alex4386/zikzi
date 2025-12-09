@@ -178,7 +178,6 @@ export default function AdminUsers() {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {user.is_admin && <Shield className="h-4 w-4 text-primary" />}
                       <div>
                         <p className="font-medium">{user.display_name}</p>
                         <p className="text-sm text-muted-foreground">@{user.username}</p>
