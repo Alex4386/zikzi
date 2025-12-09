@@ -13,6 +13,8 @@ export interface PrinterDriver {
   installerUrl?: string;
 }
 
+const SAMSUNG_INSTALLER = 'https://downloadcenter.samsung.com/content/DR/201606/20160622140904062/SamsungUniversalPrintDriver3PS.exe';
+
 const samsungSwitcherBuilder = (model: string): PrinterInstallHook => {
   return ({ printerName }) => `
 $windir = "\${env:WINDIR}"
@@ -30,14 +32,14 @@ export const PRINTER_DRIVERS: PrinterDriver[] = [
     name: 'Samsung CLX-6240 Series PS (Universal)',
     driverName: 'Samsung Universal Print Driver 3 PS',
     postInstall: samsungSwitcherBuilder('CLX-6240'),
-    installerUrl: 'https://www.samsungsvc.co.kr/solution/38849',
+    installerUrl: SAMSUNG_INSTALLER,
   },
   {
     id: 'samsung-clx-6200-series-ps-upd3',
     name: 'Samsung CLX-6200 Series PS (Universal)',
     driverName: 'Samsung Universal Print Driver 3 PS',
     postInstall: samsungSwitcherBuilder('CLX-6200'),
-    installerUrl: 'https://www.samsungsvc.co.kr/solution/38849',
+    installerUrl: SAMSUNG_INSTALLER,
   },
   // ... other drivers
 ];
@@ -125,13 +127,19 @@ if (-not $DriverInstalled) {
     $Msg = "The printer driver '$DriverName' is not installed on this computer.\`n\`n" +
            "Please download and install the driver manually.\`n\`n" +
            "Once installed, run this script again."
-
-    ${driver.installerUrl ? `
-    $Msg += "\`n\`nThe Installer can be found following directions at:\`n${driver.installerUrl}\`n\`nLink to download the driver will open when you click OK."
-    Start-Process '${driver.installerUrl}'
-    ` : ''}
     
     Show-UserPrompt $Msg
+
+    ${driver.installerUrl ? `
+    Add-Type -AssemblyName PresentationFramework
+    $Result = [System.Windows.MessageBox]::Show($Msg, "Printer Setup Required", [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Warning)
+    
+    if ($Result -eq [System.Windows.MessageBoxResult]::Yes) {
+        Start-Process '${driver.installerUrl}'
+    }
+    ` : `
+    Show-UserPrompt $Msg
+    `}
     
     # Pause so they see the error in console too
     Read-Host "Press Enter to exit..."
