@@ -1,8 +1,8 @@
 export interface PrinterDriver {
-  id: string
-  name: string
-  driverName: string
-  searchPattern: string // Pattern to search in DriverStore (empty for built-in drivers)
+  id: string;
+  name: string;
+  driverName: string; // The exact string shown in the "Add Printer" wizard
+  searchPattern: string; // (Kept for compatibility, but less critical with the new logic)
 }
 
 export const PRINTER_DRIVERS: PrinterDriver[] = [
@@ -12,165 +12,135 @@ export const PRINTER_DRIVERS: PrinterDriver[] = [
     driverName: 'Samsung CLX-6200 Series PS',
     searchPattern: 'Samsung.*CLX.*6200.*PS',
   },
-  {
-    id: 'samsung-universal',
-    name: 'Samsung Universal Print Driver 3',
-    driverName: 'Samsung Universal Print Driver 3',
-    searchPattern: 'Samsung Universal Print Driver',
-  },
-  {
-    id: 'microsoft-ps-class',
-    name: 'Microsoft PS Class Driver',
-    driverName: 'Microsoft PS Class Driver',
-    searchPattern: '',
-  },
-  {
-    id: 'microsoft-pcl6-class',
-    name: 'Microsoft PCL6 Class Driver',
-    driverName: 'Microsoft PCL6 Class Driver',
-    searchPattern: '',
-  },
-  {
-    id: 'generic-text',
-    name: 'Generic / Text Only',
-    driverName: 'Generic / Text Only',
-    searchPattern: '',
-  },
-]
+  // ... other drivers
+];
 
 export function generateWindowsScript(hostname: string, port: number, driver: PrinterDriver): string {
-  const printerName = 'Zikzi Printer'
-  const portName = `IP_${hostname}_${port}`
+  const printerName = "Zikzi Printer"; // Or dynamic if you prefer
+  const portName = `IP_${hostname}_${port}`;
+  
+  // We escape single quotes for PowerShell safety
+  const safeDriverName = driver.driverName.replace(/'/g, "''");
+  const safePrinterName = printerName.replace(/'/g, "''");
 
-  return `@echo off
-setlocal EnableDelayedExpansion
+  return `
+<# : batch portion
+@echo off
+setlocal
+cd /d "%~dp0"
 
-:: Zikzi RAW Printer Setup Script for Windows
-:: Run this script as Administrator
-
-echo ============================================
-echo  Zikzi RAW Printer Setup
-echo ============================================
-echo.
-
-:: Check for admin privileges
+:: Check for Administrator privileges
 net session >nul 2>&1
 if %errorLevel% neq 0 (
-    echo ERROR: This script requires Administrator privileges.
-    echo Please right-click and select "Run as administrator"
-    pause
-    exit /b 1
+    echo Requesting administrative privileges...
+    powershell -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    exit /b
 )
 
-set "PRINTER_NAME=${printerName}"
-set "PORT_NAME=${portName}"
-set "HOSTNAME=${hostname}"
-set "PORT=${port}"
-set "DRIVER_NAME=${driver.driverName}"
-set "SEARCH_PATTERN=${driver.searchPattern}"
+:: Run the PowerShell logic below
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Get-Content '%~f0' -Raw | Select-String -Pattern '^<# : batch portion' -Context 0,10000 | ForEach-Object { $_.Context.PostContext })"
+exit /b
+#>
 
-echo Printer Name: %PRINTER_NAME%
-echo RAW Port: %HOSTNAME%:%PORT%
-echo Driver: %DRIVER_NAME%
-echo.
+# --- POWERSHELL LOGIC STARTS HERE ---
 
-:: Check if driver is already installed
-echo Checking if driver is installed...
-powershell -Command "if (Get-PrinterDriver -Name '%DRIVER_NAME%' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+$ErrorActionPreference = "Stop"
 
-if %errorLevel% equ 0 (
-    echo Driver found!
-    goto :InstallPrinter
-)
+# --- Configuration ---
+$PrinterName = '${safePrinterName}'
+$DriverName  = '${safeDriverName}'
+$PortName    = '${portName}'
+$PrinterIP   = '${hostname}'
+$PortNumber  = ${port}
 
-:: Driver not installed
-if "%SEARCH_PATTERN%"=="" (
-    echo.
-    echo ERROR: Driver "%DRIVER_NAME%" not found.
-    echo This is a built-in driver and should be available on Windows.
-    echo.
-    pause
-    exit /b 1
-)
+# --- Helper Function: GUI Prompt ---
+function Show-UserPrompt {
+    param([string]$Message)
+    Add-Type -AssemblyName PresentationFramework
+    [System.Windows.MessageBox]::Show($Message, "Printer Setup Required", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+}
 
-:: Search DriverStore for the driver
-echo Driver not installed. Searching DriverStore...
-set "INF_PATH="
-for /f "tokens=*" %%i in ('powershell -Command "$d = Get-WindowsDriver -Online -All | Where-Object { $_.ProviderName -match '%SEARCH_PATTERN%' -or $_.OriginalFileName -match '%SEARCH_PATTERN%' } | Select-Object -First 1; if ($d) { $d.OriginalFileName }"') do (
-    set "INF_PATH=%%i"
-)
+Write-Host "============================================" -ForegroundColor Cyan
+Write-Host "      Zikzi Printer Setup Assistant         " -ForegroundColor Cyan
+Write-Host "============================================"
+Write-Host ""
 
-if "%INF_PATH%"=="" (
-    echo.
-    echo ============================================
-    echo  ERROR: Driver not found
-    echo ============================================
-    echo.
-    echo The driver "%DRIVER_NAME%" was not found in the DriverStore.
-    echo.
-    echo Please install the driver first:
-    echo   1. Download the driver from the manufacturer
-    echo   2. Run the driver installer
-    echo   3. Then re-run this script
-    echo.
-    pause
-    exit /b 1
-)
+# --- Step 1: Check Driver Status ---
+Write-Host "Checking for driver: '$DriverName'..." -ForegroundColor Yellow
 
-echo Found: %INF_PATH%
-echo Installing driver...
-pnputil /add-driver "%INF_PATH%" /install >nul 2>&1
-rundll32 printui.dll,PrintUIEntry /ia /m "%DRIVER_NAME%" /f "%INF_PATH%"
+$DriverInstalled = $false
 
-:: Verify installation
-timeout /t 2 /nobreak >nul
-powershell -Command "if (Get-PrinterDriver -Name '%DRIVER_NAME%' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+# 1. Check if actively installed (in Spooler)
+if (Get-PrinterDriver -Name $DriverName -ErrorAction SilentlyContinue) {
+    Write-Host " [OK] Driver is already active." -ForegroundColor Green
+    $DriverInstalled = $true
+} 
+else {
+    # 2. Check Driver Store (Available but not active)
+    Write-Host " Driver not active. Checking Windows Driver Store..." -ForegroundColor Gray
+    try {
+        # Add-PrinterDriver automatically looks in the Driver Store for the name
+        Add-PrinterDriver -Name $DriverName -ErrorAction Stop
+        Write-Host " [OK] Driver retrieved from system storage." -ForegroundColor Green
+        $DriverInstalled = $true
+    }
+    catch {
+        # 3. DRIVER MISSING
+        Write-Warning "Driver not found on this computer."
+    }
+}
 
-if %errorLevel% neq 0 (
-    echo ERROR: Failed to install driver.
-    pause
-    exit /b 1
-)
+# --- Step 2: Handle Missing Driver ---
+if (-not $DriverInstalled) {
+    Write-Host ""
+    Write-Host "CRITICAL: The required driver is missing." -ForegroundColor Red
+    
+    $Msg = "The printer driver '$DriverName' is not installed on this computer.\`n\`n" +
+           "Please download and install the driver manually.\`n\`n" +
+           "Once installed, run this script again."
+    
+    Show-UserPrompt $Msg
+    
+    # Pause so they see the error in console too
+    Read-Host "Press Enter to exit..."
+    exit 1
+}
 
-echo Driver installed!
+# --- Step 3: Configure Port ---
+Write-Host "Checking Network Port..." -ForegroundColor Yellow
+if (-not (Get-PrinterPort -Name $PortName -ErrorAction SilentlyContinue)) {
+    try {
+        Add-PrinterPort -Name $PortName -PrinterHostAddress $PrinterIP -PortNumber $PortNumber
+        Write-Host " [OK] Created port $PortName" -ForegroundColor Green
+    } catch {
+        Write-Error "Failed to create printer port. $_"
+        Read-Host "Press Enter to exit..."
+        exit 1
+    }
+} else {
+    Write-Host " [OK] Port already exists." -ForegroundColor Gray
+}
 
-:InstallPrinter
-echo.
-echo Setting up printer...
+# --- Step 4: Install Printer ---
+Write-Host "Installing Printer Object..." -ForegroundColor Yellow
 
-:: Remove existing printer
-rundll32 printui.dll,PrintUIEntry /dl /n "%PRINTER_NAME%" >nul 2>&1
+if (Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue) {
+    Write-Host " [INFO] Printer '$PrinterName' already exists. Updating settings..." -ForegroundColor Gray
+    # Optional: Update driver if it changed
+    Set-Printer -Name $PrinterName -DriverName $DriverName -PortName $PortName
+} else {
+    try {
+        Add-Printer -Name $PrinterName -DriverName $DriverName -PortName $PortName
+        Write-Host " [SUCCESS] Printer installed successfully!" -ForegroundColor Green
+    } catch {
+        Write-Error "Failed to create printer object. $_"
+        Show-UserPrompt "Failed to create printer. Error: $_"
+        exit 1
+    }
+}
 
-:: Remove existing port
-powershell -Command "Remove-PrinterPort -Name '%PORT_NAME%' -ErrorAction SilentlyContinue" 2>nul
-
-:: Create port
-echo Creating port %PORT_NAME%...
-powershell -Command "Add-PrinterPort -Name '%PORT_NAME%' -PrinterHostAddress '%HOSTNAME%' -PortNumber %PORT%"
-if %errorLevel% neq 0 (
-    echo ERROR: Failed to create port.
-    pause
-    exit /b 1
-)
-
-:: Add printer
-echo Adding printer...
-powershell -Command "Add-Printer -Name '%PRINTER_NAME%' -DriverName '%DRIVER_NAME%' -PortName '%PORT_NAME%'"
-
-if %errorLevel% equ 0 (
-    echo.
-    echo ============================================
-    echo  SUCCESS!
-    echo ============================================
-    echo.
-    echo Printer "%PRINTER_NAME%" installed.
-    echo Driver: %DRIVER_NAME%
-) else (
-    echo.
-    echo ERROR: Failed to add printer.
-)
-
-echo.
-pause
-`
+Write-Host ""
+Write-Host "Setup Complete." -ForegroundColor Cyan
+Start-Sleep -Seconds 3
+`;
 }

@@ -167,6 +167,10 @@
     },
     "delete": {
       "confirm": "이 IP 주소를 제거하시겠습니까?"
+    },
+    "edit": {
+      "title": "IP 주소 편집",
+      "description": "{{ip}}의 설명 수정"
     }
   },
   "settings": {

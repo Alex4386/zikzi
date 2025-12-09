@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Plus, Trash2, Network, Loader2, Wifi } from 'lucide-react'
-import { api } from '@/lib/api'
+import { Plus, Trash2, Network, Loader2, Wifi, Pencil } from 'lucide-react'
+import { api, IPRegistration } from '@/lib/api'
 import { PageContainer } from '@/components/PageContainer'
 import { Note } from '@/components/Note'
 import { Button } from '@/components/ui/button'
@@ -18,12 +18,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 export default function IPAddresses() {
   const { t } = useTranslation()
   const [showForm, setShowForm] = useState(false)
   const [ipAddress, setIpAddress] = useState('')
   const [description, setDescription] = useState('')
+  const [editingIp, setEditingIp] = useState<IPRegistration | null>(null)
+  const [editDescription, setEditDescription] = useState('')
   const queryClient = useQueryClient()
 
   const { data: ips, isLoading } = useQuery({
@@ -54,6 +64,28 @@ export default function IPAddresses() {
       queryClient.invalidateQueries({ queryKey: ['ips'] })
     },
   })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, description }: { id: string; description: string }) =>
+      api.updateIP(id, description),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ips'] })
+      setEditingIp(null)
+      setEditDescription('')
+    },
+  })
+
+  const handleEdit = (ip: IPRegistration) => {
+    setEditingIp(ip)
+    setEditDescription(ip.description || '')
+  }
+
+  const handleUpdateSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editingIp) {
+      updateMutation.mutate({ id: editingIp.id, description: editDescription })
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -184,6 +216,13 @@ export default function IPAddresses() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => handleEdit(ip)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => {
                         if (confirm(t('ipAddresses.delete.confirm'))) {
                           deleteMutation.mutate(ip.id)
@@ -200,6 +239,45 @@ export default function IPAddresses() {
           </Table>
         </Card>
       )}
+
+      {/* Edit IP Dialog */}
+      <Dialog open={!!editingIp} onOpenChange={(open) => !open && setEditingIp(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('ipAddresses.edit.title')}</DialogTitle>
+            <DialogDescription>
+              {t('ipAddresses.edit.description', { ip: editingIp?.ip_address })}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="editDescription">{t('common.description')}</Label>
+                <Input
+                  id="editDescription"
+                  type="text"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder={t('ipAddresses.labelPlaceholder')}
+                />
+              </div>
+              {updateMutation.error && (
+                <Note variant="error">
+                  {updateMutation.error instanceof Error ? updateMutation.error.message : t('common.failedToSave')}
+                </Note>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditingIp(null)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? t('common.saving') : t('common.save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   )
 }

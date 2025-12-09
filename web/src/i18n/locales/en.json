@@ -167,6 +167,10 @@
     },
     "delete": {
       "confirm": "Remove this IP address?"
+    },
+    "edit": {
+      "title": "Edit IP Address",
+      "description": "Update description for {{ip}}"
     }
   },
   "settings": {
