@@ -59,7 +59,7 @@ type OIDCConfig struct {
 	ClientSecret    string            `mapstructure:"client_secret"`
 	RedirectURL     string            `mapstructure:"redirect_url"`
 	AutoCreateUsers bool              `mapstructure:"auto_create_users"` // Create new users on first OIDC login
-	ExtraFlags      []string          `mapstructure:"extra_flags"`       // Extra query params for auth URL (e.g., "hd=example.com")
+	AuthParams      []string          `mapstructure:"auth_params"`       // Extra query params for auth URL (e.g., "hd=example.com")
 	ACL             ACLConfig         `mapstructure:"acl"`
 }
 

@@ -89,9 +89,9 @@ func (p *OIDCProvider) GenerateAuthURL(redirectAfterLogin string) (string, strin
 	// Clean up old states periodically
 	go p.cleanupOldStates()
 
-	// Build auth URL with extra flags
+	// Build auth URL with auth params
 	var opts []oauth2.AuthCodeOption
-	for _, flag := range p.config.ExtraFlags {
+	for _, flag := range p.config.AuthParams {
 		if key, value, ok := strings.Cut(flag, "="); ok {
 			opts = append(opts, oauth2.SetAuthURLParam(key, value))
 		}

@@ -31,6 +31,9 @@ type Server struct {
 func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	router := gin.Default()
 
+	// Disable automatic trailing slash redirect to prevent redirect loops
+	router.RedirectTrailingSlash = false
+
 	// Configure trusted proxies
 	if cfg.Web.TrustProxy {
 		if len(cfg.Web.TrustedProxies) > 0 {
@@ -146,14 +149,13 @@ func (s *Server) setupRoutes() {
 	// Serve embedded static files (WebUI)
 	staticContent, err := fs.Sub(staticFS, "static")
 	if err == nil {
-		// Handle all /ui/* paths - serve static files or fallback to index.html for SPA
-		s.router.GET("/ui/*path", func(c *gin.Context) {
+		serveUI := func(c *gin.Context) {
 			path := c.Param("path")
 			// Remove leading slash
 			if len(path) > 0 && path[0] == '/' {
 				path = path[1:]
 			}
-			// Empty path means /ui/ was requested
+			// Empty path means /ui or /ui/ was requested
 			if path == "" {
 				c.FileFromFS("index.html", http.FS(staticContent))
 				return
@@ -167,7 +169,12 @@ func (s *Server) setupRoutes() {
 			}
 			// Not a static file, serve index.html for SPA routing
 			c.FileFromFS("index.html", http.FS(staticContent))
-		})
+		}
+
+		// Use a group with trailing slash handling disabled
+		ui := s.router.Group("/ui")
+		ui.GET("", serveUI)
+		ui.GET("/*path", serveUI)
 	}
 
 	// Redirect root to UI

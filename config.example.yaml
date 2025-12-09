@@ -36,6 +36,7 @@ auth:
     client_secret: ""
     redirect_url: "http://localhost:8080/api/v1/auth/oidc/callback"
     auto_create_users: true  # Create new users on first OIDC login (set to false to require pre-created accounts)
+    auth_params: []          # Extra query params for auth URL (e.g., ["hd=example.com", "prompt=consent"])
     acl:
       # Access Control List - restrict who can access via OIDC
       # If all lists are empty, ACL is disabled and all authenticated users are allowed
