@@ -75,7 +75,7 @@ export default function Settings() {
           <div className="bg-muted rounded-lg p-4">
             <p className="text-sm text-muted-foreground mb-1">{t('settings.printer.rawSocketAddress')}</p>
             <code className="text-lg font-mono text-primary">
-              socket://{printerHostname}:{rawPort}
+              {printerHostname}
             </code>
           </div>
 
