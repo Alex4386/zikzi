@@ -138,10 +138,17 @@ class Api {
     return this.request<IPRegistration[]>('/ips')
   }
 
-  registerIP(ip_address: string, description: string) {
+  registerIP(ip_address: string, description: string, user_id?: string) {
     return this.request<IPRegistration>('/ips', {
       method: 'POST',
-      body: JSON.stringify({ ip_address, description }),
+      body: JSON.stringify({ ip_address, description, user_id }),
+    })
+  }
+
+  updateIP(id: string, description: string) {
+    return this.request<IPRegistration>(`/ips/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ description }),
     })
   }
 
@@ -255,6 +262,12 @@ export interface PrintJob {
 export interface IPRegistration {
   id: string
   created_at: string
+  user_id: string
+  user?: {
+    id: string
+    username: string
+    display_name: string
+  }
   ip_address: string
   description: string
   is_active: boolean

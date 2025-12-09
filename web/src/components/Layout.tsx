@@ -60,6 +60,7 @@ export default function Layout() {
     { to: '/admin', icon: LayoutDashboard, label: t('nav.dashboard') },
     { to: '/admin/users', icon: Users, label: t('nav.users') },
     { to: '/admin/jobs', icon: FileText, label: t('nav.allJobs') },
+    { to: '/admin/ips', icon: Network, label: t('nav.ipAddresses') },
     { to: '/admin/orphaned', icon: AlertTriangle, label: t('nav.orphanedJobs') },
   ]
 

@@ -22,6 +22,12 @@ func NewIPHandler(db *gorm.DB) *IPHandler {
 type RegisterIPRequest struct {
 	IPAddress   string `json:"ip_address" binding:"required" example:"192.168.1.100"`
 	Description string `json:"description" example:"Office Desktop"`
+	UserID      string `json:"user_id" example:"abc123"` // Admin only: register on behalf of user
+}
+
+// UpdateIPRequest represents IP update data
+type UpdateIPRequest struct {
+	Description string `json:"description" example:"Office Desktop"`
 }
 
 // DetectIPResponse represents the detected IP response
@@ -29,9 +35,9 @@ type DetectIPResponse struct {
 	IPAddress string `json:"ip_address" example:"192.168.1.100"`
 }
 
-// ListIPs returns all registered IP addresses for the authenticated user
+// ListIPs returns all registered IP addresses for the authenticated user (or all IPs for admin)
 // @Summary List registered IPs
-// @Description Get all IP addresses registered by the authenticated user
+// @Description Get all IP addresses registered by the authenticated user (admin sees all)
 // @Tags ips
 // @Produce json
 // @Security BearerAuth
@@ -40,9 +46,14 @@ type DetectIPResponse struct {
 // @Router /ips [get]
 func (h *IPHandler) ListIPs(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
 
 	var ips []models.IPRegistration
-	if err := h.db.Where("user_id = ?", userID).Find(&ips).Error; err != nil {
+	query := h.db
+	if !isAdmin {
+		query = query.Where("user_id = ?", userID)
+	}
+	if err := query.Preload("User").Find(&ips).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch IPs"})
 		return
 	}
@@ -52,7 +63,7 @@ func (h *IPHandler) ListIPs(c *gin.Context) {
 
 // RegisterIP registers a new IP address for the authenticated user
 // @Summary Register IP address
-// @Description Register a new IP address to associate with the user's account
+// @Description Register a new IP address to associate with the user's account (admin can register on behalf of user)
 // @Tags ips
 // @Accept json
 // @Produce json
@@ -65,11 +76,18 @@ func (h *IPHandler) ListIPs(c *gin.Context) {
 // @Router /ips [post]
 func (h *IPHandler) RegisterIP(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
 
 	var req RegisterIPRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Admin can register on behalf of another user
+	targetUserID := userID
+	if req.UserID != "" && isAdmin {
+		targetUserID = req.UserID
 	}
 
 	// Check if IP is already registered
@@ -80,7 +98,7 @@ func (h *IPHandler) RegisterIP(c *gin.Context) {
 	}
 
 	ip := models.IPRegistration{
-		UserID:      userID,
+		UserID:      targetUserID,
 		IPAddress:   req.IPAddress,
 		Description: req.Description,
 		IsActive:    true,
@@ -91,12 +109,62 @@ func (h *IPHandler) RegisterIP(c *gin.Context) {
 		return
 	}
 
+	// Preload user for response
+	h.db.Preload("User").First(&ip, "id = ?", ip.ID)
+
 	c.JSON(http.StatusCreated, ip)
+}
+
+// UpdateIP updates an IP registration's description
+// @Summary Update IP registration
+// @Description Update an IP address registration's description (admin can update any)
+// @Tags ips
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "IP Registration ID"
+// @Param request body UpdateIPRequest true "IP update data"
+// @Success 200 {object} models.IPRegistration
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Router /ips/{id} [put]
+func (h *IPHandler) UpdateIP(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
+	ipID := c.Param("id")
+
+	var req UpdateIPRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var ip models.IPRegistration
+	query := h.db.Where("id = ?", ipID)
+	if !isAdmin {
+		query = query.Where("user_id = ?", userID)
+	}
+	if err := query.First(&ip).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "IP registration not found"})
+		return
+	}
+
+	ip.Description = req.Description
+	if err := h.db.Save(&ip).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update IP"})
+		return
+	}
+
+	// Preload user for response
+	h.db.Preload("User").First(&ip, "id = ?", ip.ID)
+
+	c.JSON(http.StatusOK, ip)
 }
 
 // DeleteIP removes an IP registration
 // @Summary Delete IP registration
-// @Description Remove an IP address registration
+// @Description Remove an IP address registration (admin can delete any)
 // @Tags ips
 // @Produce json
 // @Security BearerAuth
@@ -107,9 +175,14 @@ func (h *IPHandler) RegisterIP(c *gin.Context) {
 // @Router /ips/{id} [delete]
 func (h *IPHandler) DeleteIP(c *gin.Context) {
 	userID := middleware.GetUserID(c)
+	isAdmin := middleware.IsAdmin(c)
 	ipID := c.Param("id")
 
-	result := h.db.Where("id = ? AND user_id = ?", ipID, userID).Delete(&models.IPRegistration{})
+	query := h.db.Where("id = ?", ipID)
+	if !isAdmin {
+		query = query.Where("user_id = ?", userID)
+	}
+	result := query.Delete(&models.IPRegistration{})
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "IP registration not found"})
 		return

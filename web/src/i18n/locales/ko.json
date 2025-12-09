@@ -117,6 +117,7 @@
       "assign": "할당",
       "view": "상세 보기"
     },
+    "deleteConfirm": "\"{{name}}\"을(를) 삭제하시겠습니까?",
     "assign": {
       "title": "사용자에게 작업 할당",
       "description": "\"{{name}}\"을(를) 사용자에게 할당합니다.",
@@ -200,11 +201,10 @@
       "step5": "\"IP 주소\" 탭에서 IP 주소를 등록",
       "automaticSetup": "자동 설정",
       "automaticSetupDescription": "프린터를 자동으로 구성하는 스크립트를 다운로드하세요",
+      "selectDriver": "프린터 드라이버",
       "downloadWindows": "Windows용 다운로드 (.bat)",
-      "downloadMac": "macOS용 다운로드 (.command)",
-      "downloadLinux": "Linux용 다운로드 (.sh)",
       "windowsNote": "Windows: 우클릭하고 \"관리자 권한으로 실행\"",
-      "macLinuxNote": "macOS/Linux: chmod +x 실행 후 스크립트 실행"
+      "macLinuxNote": "macOS/Linux: IPP 자동 검색 또는 수동으로 프린터 추가"
     }
   },
   "profile": {
@@ -258,6 +258,21 @@
       "jobCount": "작업 수",
       "failedToLoad": "사용자를 불러오는데 실패했습니다",
       "deleteConfirm": "정말로 {{name}} (@{{username}})을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+    },
+    "ips": {
+      "title": "IP 주소",
+      "addIp": "IP 추가",
+      "editIp": "IP 편집",
+      "deleteIp": "IP 삭제",
+      "ipAddress": "IP 주소",
+      "registeredAt": "등록 일시",
+      "noIps": "등록된 IP 주소가 없습니다",
+      "failedToLoad": "IP 주소를 불러오는데 실패했습니다",
+      "addIpDescription": "IP 주소를 등록하고 사용자에게 할당합니다",
+      "editIpDescription": "{{ip}}의 설명 수정",
+      "deleteConfirm": "정말로 IP {{ip}}을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "assignToUser": "사용자에게 할당",
+      "selectUser": "사용자 선택"
     }
   },
   "view": {

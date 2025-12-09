@@ -117,6 +117,7 @@
       "assign": "Assign",
       "view": "View Details"
     },
+    "deleteConfirm": "Delete \"{{name}}\"?",
     "assign": {
       "title": "Assign Job to User",
       "description": "Assign \"{{name}}\" to a user.",
@@ -200,11 +201,10 @@
       "step5": "Register your IP address in the \"IP Addresses\" tab",
       "automaticSetup": "Automatic Setup",
       "automaticSetupDescription": "Download a script to automatically configure the printer",
+      "selectDriver": "Printer Driver",
       "downloadWindows": "Download for Windows (.bat)",
-      "downloadMac": "Download for macOS (.command)",
-      "downloadLinux": "Download for Linux (.sh)",
       "windowsNote": "Windows: Right-click and \"Run as administrator\"",
-      "macLinuxNote": "macOS/Linux: Run chmod +x then execute the script"
+      "macLinuxNote": "macOS/Linux: Use IPP auto-discovery or add printer manually"
     }
   },
   "profile": {
@@ -258,6 +258,21 @@
       "jobCount": "Jobs",
       "failedToLoad": "Failed to load users",
       "deleteConfirm": "Are you sure you want to delete {{name}} (@{{username}})? This action cannot be undone."
+    },
+    "ips": {
+      "title": "IP Addresses",
+      "addIp": "Add IP",
+      "editIp": "Edit IP",
+      "deleteIp": "Delete IP",
+      "ipAddress": "IP Address",
+      "registeredAt": "Registered At",
+      "noIps": "No IP addresses registered",
+      "failedToLoad": "Failed to load IP addresses",
+      "addIpDescription": "Register an IP address and assign it to a user",
+      "editIpDescription": "Edit description for {{ip}}",
+      "deleteConfirm": "Are you sure you want to delete IP {{ip}}? This action cannot be undone.",
+      "assignToUser": "Assign to User",
+      "selectUser": "Select a user"
     }
   },
   "view": {

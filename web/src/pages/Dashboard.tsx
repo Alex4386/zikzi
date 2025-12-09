@@ -39,7 +39,7 @@ export default function Dashboard() {
   })
 
   const handleDelete = (job: PrintJob) => {
-    if (confirm(`${t('common.delete')} "${job.document_name || t('jobs.untitled')}"?`)) {
+    if (confirm(t('jobs.deleteConfirm', { name: job.document_name || t('jobs.untitled') }))) {
       deleteMutation.mutate(job.id)
     }
   }

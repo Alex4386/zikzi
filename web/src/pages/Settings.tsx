@@ -1,12 +1,22 @@
+import { useState } from 'react'
 import { Printer, Download } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { PageContainer } from '@/components/PageContainer'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   generateWindowsScript,
   downloadScript,
+  PRINTER_DRIVERS,
 } from '@/lib/printer-scripts'
 
 interface Config {
@@ -28,9 +38,11 @@ export default function Settings() {
 
   const printerHostname = config?.printer_external_hostname || window.location.hostname
   const rawPort = config?.raw_port || 9100
+  const [selectedDriver, setSelectedDriver] = useState(PRINTER_DRIVERS[0].id)
 
   const handleDownloadWindows = () => {
-    const script = generateWindowsScript(printerHostname, rawPort)
+    const driver = PRINTER_DRIVERS.find(d => d.id === selectedDriver) || PRINTER_DRIVERS[0]
+    const script = generateWindowsScript(printerHostname, rawPort, driver)
     downloadScript(script, 'setup-zikzi-printer.bat')
   }
 
@@ -84,12 +96,27 @@ export default function Settings() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="driver-select">{t('settings.printer.selectDriver')}</Label>
+            <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+              <SelectTrigger id="driver-select">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRINTER_DRIVERS.map((driver) => (
+                  <SelectItem key={driver.id} value={driver.id}>
+                    {driver.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button onClick={handleDownloadWindows} variant="outline" className="w-full justify-start">
             <Download className="h-4 w-4 mr-2" />
             {t('settings.printer.downloadWindows')}
           </Button>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground">
             {t('settings.printer.windowsNote')}
           </p>
           <p className="text-xs text-muted-foreground">

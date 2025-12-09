@@ -11,6 +11,7 @@ import Profile from './pages/my/Profile'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminJobs from './pages/admin/AdminJobs'
+import AdminIPs from './pages/admin/AdminIPs'
 import OrphanedJobs from './pages/admin/OrphanedJobs'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -71,6 +72,7 @@ function App() {
           <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="admin/jobs" element={<AdminRoute><AdminJobs /></AdminRoute>} />
+          <Route path="admin/ips" element={<AdminRoute><AdminIPs /></AdminRoute>} />
           <Route path="admin/orphaned" element={<AdminRoute><OrphanedJobs /></AdminRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

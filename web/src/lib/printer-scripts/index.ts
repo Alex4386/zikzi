@@ -1,4 +1,5 @@
-export { generateWindowsScript } from './windows'
+export { generateWindowsScript, PRINTER_DRIVERS } from './windows'
+export type { PrinterDriver } from './windows'
 
 export function downloadScript(content: string, filename: string) {
   const blob = new Blob([content], { type: 'text/plain' })

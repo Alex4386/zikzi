@@ -112,6 +112,7 @@ func (s *Server) setupRoutes() {
 				ipHandler := handlers.NewIPHandler(s.db)
 				ips.GET("", ipHandler.ListIPs)
 				ips.POST("", ipHandler.RegisterIP)
+				ips.PUT("/:id", ipHandler.UpdateIP)
 				ips.DELETE("/:id", ipHandler.DeleteIP)
 				ips.GET("/detect", ipHandler.DetectIP)
 			}
@@ -145,17 +146,32 @@ func (s *Server) setupRoutes() {
 	// Serve embedded static files (WebUI)
 	staticContent, err := fs.Sub(staticFS, "static")
 	if err == nil {
-		s.router.StaticFS("/ui", http.FS(staticContent))
+		// Serve index.html for /ui/ root
+		s.router.GET("/ui/", func(c *gin.Context) {
+			c.FileFromFS("index.html", http.FS(staticContent))
+		})
 
-		// SPA fallback - serve index.html for unmatched routes under /ui
-		s.router.NoRoute(func(c *gin.Context) {
-			path := c.Request.URL.Path
-			// Only handle /ui paths that aren't static files
-			if len(path) >= 3 && path[:3] == "/ui" {
+		// Handle all /ui/* paths - serve static files or fallback to index.html for SPA
+		s.router.GET("/ui/*path", func(c *gin.Context) {
+			path := c.Param("path")
+			// Remove leading slash
+			if len(path) > 0 && path[0] == '/' {
+				path = path[1:]
+			}
+			// Empty path means /ui/ was requested
+			if path == "" {
 				c.FileFromFS("index.html", http.FS(staticContent))
 				return
 			}
-			c.JSON(404, gin.H{"error": "not found"})
+			// Try to serve the static file
+			f, err := staticContent.Open(path)
+			if err == nil {
+				f.Close()
+				c.FileFromFS(path, http.FS(staticContent))
+				return
+			}
+			// Not a static file, serve index.html for SPA routing
+			c.FileFromFS("index.html", http.FS(staticContent))
 		})
 	}
 
