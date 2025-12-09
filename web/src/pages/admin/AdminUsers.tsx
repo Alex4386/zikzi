@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Loader2, Shield, User, Plus, Pencil, Trash2, Key } from 'lucide-react'
+import { Loader2, User, Plus, Pencil, Trash2, Key } from 'lucide-react'
 import { api, AdminUser } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { PageContainer } from '@/components/PageContainer'

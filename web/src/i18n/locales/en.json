@@ -204,7 +204,9 @@
       "selectDriver": "Printer Driver",
       "downloadWindows": "Download for Windows (.bat)",
       "windowsNote": "Windows: Right-click and \"Run as administrator\"",
-      "macLinuxNote": "macOS/Linux: Use IPP auto-discovery or add printer manually"
+      "macLinuxNote": "macOS/Linux: Use IPP auto-discovery or add printer manually",
+      "insecureWarningTitle": "Insecure Connection",
+      "insecureWarningDescription": "The printer connection is unencrypted. All print data is transmitted in plaintext over the internet, allowing anyone who can intercept the traffic to see the contents of your documents."
     }
   },
   "profile": {

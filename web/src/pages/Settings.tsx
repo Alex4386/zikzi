@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Printer, Download } from 'lucide-react'
+import { Printer, Download, AlertTriangle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { PageContainer } from '@/components/PageContainer'
@@ -23,6 +23,7 @@ interface Config {
   printer_external_hostname: string
   ipp_port: number
   raw_port: number
+  printer_insecure: boolean
 }
 
 export default function Settings() {
@@ -49,6 +50,16 @@ export default function Settings() {
   return (
     <PageContainer>
       <h1 className="text-2xl font-bold mb-6">{t('settings.title')}</h1>
+
+      {config?.printer_insecure && (
+        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-destructive">{t('settings.printer.insecureWarningTitle')}</p>
+            <p className="text-sm text-destructive/80 mt-1">{t('settings.printer.insecureWarningDescription')}</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         <Card>

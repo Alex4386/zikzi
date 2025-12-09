@@ -24,6 +24,7 @@ type ConfigResponse struct {
 	RawPort                 int    `json:"raw_port" example:"9100"`
 	AllowLocal              bool   `json:"allow_local" example:"true"`
 	SSOEnabled              bool   `json:"sso_enabled" example:"false"`
+	PrinterInsecure         bool   `json:"printer_insecure" example:"false"`
 }
 
 // GetPublicConfig returns public configuration
@@ -40,5 +41,6 @@ func (h *ConfigHandler) GetPublicConfig(c *gin.Context) {
 		RawPort:                 h.config.Printer.Port,
 		AllowLocal:              h.config.Auth.AllowLocal,
 		SSOEnabled:              h.config.Auth.OIDC.Enabled,
+		PrinterInsecure:         h.config.Printer.Insecure,
 	})
 }

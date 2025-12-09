@@ -204,7 +204,9 @@
       "selectDriver": "프린터 드라이버",
       "downloadWindows": "Windows용 다운로드 (.bat)",
       "windowsNote": "Windows: 우클릭하고 \"관리자 권한으로 실행\"",
-      "macLinuxNote": "macOS/Linux: IPP 자동 검색 또는 수동으로 프린터 추가"
+      "macLinuxNote": "macOS/Linux: IPP 자동 검색 또는 수동으로 프린터 추가",
+      "insecureWarningTitle": "보안되지 않은 연결",
+      "insecureWarningDescription": "프린터 연결이 암호화되지 않아 모든 인쇄 데이터가 인터넷을 통해 평문으로 전송되어, 트래픽을 가로챌 수 있는 누구나 문서 내용을 볼 수 있습니다. 민감한 정보를 인쇄하지 마세요."
     }
   },
   "profile": {

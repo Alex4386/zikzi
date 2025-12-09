@@ -30,6 +30,7 @@ type PrinterConfig struct {
 	ExternalHostname     string   `mapstructure:"external_hostname"`  // External hostname for printer access (e.g., "printer.example.com")
 	ProxyProtocol        bool     `mapstructure:"proxy_protocol"`     // Enable PROXY protocol v1/v2 support
 	TrustedProxies       []string `mapstructure:"trusted_proxies"`    // List of trusted proxy IPs/CIDRs for PROXY protocol
+	Insecure             bool     `mapstructure:"insecure"`           // Mark connection as insecure (show warning in UI)
 }
 
 type IPPConfig struct {

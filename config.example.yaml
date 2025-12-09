@@ -13,6 +13,7 @@ printer:
   external_hostname: ""          # External hostname for printer (e.g., "printer.example.com"). If empty, uses current hostname. Port 9100 is always appended.
   proxy_protocol: false          # Enable PROXY protocol v1/v2 support for getting real client IPs behind load balancers
   trusted_proxies: []            # List of trusted proxy IPs/CIDRs for PROXY protocol (e.g., ["127.0.0.1", "10.0.0.0/8"])
+  insecure: false                # Show warning in UI that printer connection is unencrypted (set to true when exposed to internet without VPN/tunnel)
 
 ipp:
   enabled: true
