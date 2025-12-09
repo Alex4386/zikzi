@@ -290,6 +290,7 @@ func (s *IPPServer) handlePrintJob(r *http.Request, msg *goipp.Message, body []b
 	resp.Job.Add(goipp.MakeAttribute("job-id", goipp.TagInteger, goipp.Integer(1)))
 	resp.Job.Add(goipp.MakeAttribute("job-uri", goipp.TagURI, goipp.String(jobURI)))
 	resp.Job.Add(goipp.MakeAttribute("job-state", goipp.TagEnum, goipp.Integer(5))) // processing
+	resp.Job.Add(goipp.MakeAttribute("job-state-reasons", goipp.TagKeyword, goipp.String("job-printing")))
 
 	logger.Info("IPP: Print job %s created successfully", job.ID)
 	return resp
@@ -309,6 +310,7 @@ func (s *IPPServer) handleGetPrinterAttributes(msg *goipp.Message) *goipp.Messag
 	resp.Printer.Add(goipp.MakeAttribute("printer-uri-supported", goipp.TagURI, goipp.String(s.printerURI)))
 	resp.Printer.Add(goipp.MakeAttribute("uri-security-supported", goipp.TagKeyword, goipp.String("none")))
 	resp.Printer.Add(goipp.MakeAttribute("uri-authentication-supported", goipp.TagKeyword, goipp.String("none")))
+	resp.Printer.Add(goipp.MakeAttribute("requesting-user-name-supported", goipp.TagBoolean, goipp.Boolean(true)))
 	resp.Printer.Add(goipp.MakeAttribute("printer-name", goipp.TagName, goipp.String("Zikzi Printer")))
 	resp.Printer.Add(goipp.MakeAttribute("printer-info", goipp.TagText, goipp.String("Zikzi Multi-User Printing Server")))
 	resp.Printer.Add(goipp.MakeAttribute("printer-make-and-model", goipp.TagText, goipp.String("Zikzi Virtual Printer")))
@@ -332,6 +334,14 @@ func (s *IPPServer) handleGetPrinterAttributes(msg *goipp.Message) *goipp.Messag
 	resp.Printer.Add(fmtAttr)
 	resp.Printer.Add(goipp.MakeAttribute("document-format-default", goipp.TagMimeType, goipp.String("application/postscript")))
 
+	// Color support - IMPORTANT: advertise as color printer
+	resp.Printer.Add(goipp.MakeAttribute("color-supported", goipp.TagBoolean, goipp.Boolean(true)))
+	colorModeAttr := goipp.MakeAttribute("print-color-mode-supported", goipp.TagKeyword, goipp.String("auto"))
+	colorModeAttr.Values.Add(goipp.TagKeyword, goipp.String("color"))
+	colorModeAttr.Values.Add(goipp.TagKeyword, goipp.String("monochrome"))
+	resp.Printer.Add(colorModeAttr)
+	resp.Printer.Add(goipp.MakeAttribute("print-color-mode-default", goipp.TagKeyword, goipp.String("auto")))
+
 	// Charset and language
 	resp.Printer.Add(goipp.MakeAttribute("charset-configured", goipp.TagCharset, goipp.String("utf-8")))
 	resp.Printer.Add(goipp.MakeAttribute("charset-supported", goipp.TagCharset, goipp.String("utf-8")))
@@ -346,6 +356,10 @@ func (s *IPPServer) handleGetPrinterAttributes(msg *goipp.Message) *goipp.Messag
 
 	// PDL override
 	resp.Printer.Add(goipp.MakeAttribute("pdl-override-supported", goipp.TagKeyword, goipp.String("attempted")))
+
+	// Multiple job support - helps clients understand the queue behavior
+	resp.Printer.Add(goipp.MakeAttribute("multiple-document-jobs-supported", goipp.TagBoolean, goipp.Boolean(false)))
+	resp.Printer.Add(goipp.MakeAttribute("multiple-operation-time-out", goipp.TagInteger, goipp.Integer(120)))
 
 	// Queue info
 	resp.Printer.Add(goipp.MakeAttribute("queued-job-count", goipp.TagInteger, goipp.Integer(s.getQueuedJobCount())))
