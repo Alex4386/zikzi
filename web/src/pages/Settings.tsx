@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Printer, Download, Cable, Wifi, Shield } from 'lucide-react'
+import { Printer, Download, Cable, Wifi, Shield, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { PageContainer } from '@/components/PageContainer'
@@ -63,6 +64,13 @@ export default function Settings() {
       return res.json()
     },
   })
+
+  const { data: ips } = useQuery({
+    queryKey: ['ips'],
+    queryFn: () => api.getIPs(),
+  })
+
+  const hasRegisteredIPs = (ips?.length ?? 0) > 0
 
   // Update local state when user changes
   useEffect(() => {
@@ -130,6 +138,15 @@ export default function Settings() {
 
         {/* RAW Socket Tab */}
         <TabsContent value="raw">
+          {!hasRegisteredIPs && (
+            <Note variant="warning" title={t('settings.printer.noIpRegistered')} className="mb-6">
+              <p>{t('settings.printer.noIpRegisteredHint')}</p>
+              <Link to="/ips" className="inline-flex items-center text-sm font-medium text-primary hover:underline mt-2">
+                {t('settings.printer.registerIpLink')}
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Link>
+            </Note>
+          )}
           <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
             <Card>
               <CardHeader>
@@ -240,6 +257,27 @@ export default function Settings() {
                       <li>{t('settings.printer.ippStep4')}</li>
                     </ol>
                   </div>
+
+                  {config.ipp_auth.allow_login && (
+                    <div className="border-t pt-4 mt-4">
+                      <p className="text-sm font-medium mb-3">{t('settings.printer.ippCredentials')}</p>
+                      <p className="text-xs text-muted-foreground mb-3">{t('settings.printer.ippCredentialsDescription')}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-muted rounded">
+                          <span className="text-sm text-muted-foreground">{t('settings.printer.ippUsername')}</span>
+                          <code className="font-mono text-sm text-primary">{user?.username}</code>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-muted rounded">
+                          <span className="text-sm text-muted-foreground">{t('settings.printer.ippPassword')}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {allowIPPPassword
+                              ? t('settings.printer.ippPasswordHint')
+                              : t('settings.printer.ippPasswordHintTokenOnly')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

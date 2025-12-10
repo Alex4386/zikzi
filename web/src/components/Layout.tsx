@@ -62,6 +62,7 @@ export default function Layout() {
     { to: '/admin/users', icon: Users, label: t('nav.users') },
     { to: '/admin/jobs', icon: FileText, label: t('nav.allJobs') },
     { to: '/admin/ips', icon: Network, label: t('nav.ipAddresses') },
+    { to: '/admin/tokens', icon: Key, label: t('nav.tokens') },
     { to: '/admin/orphaned', icon: AlertTriangle, label: t('nav.orphanedJobs') },
   ]
 

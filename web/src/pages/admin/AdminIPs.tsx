@@ -52,7 +52,7 @@ export default function AdminIPs() {
 
   const { data: ips, isLoading, error: fetchError } = useQuery({
     queryKey: ['admin', 'ips'],
-    queryFn: () => api.getIPs(),
+    queryFn: () => api.getIPs({ full: true }),
   })
 
   const { data: users } = useQuery({

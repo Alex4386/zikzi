@@ -43,22 +43,42 @@ type CreateIPPTokenResponse struct {
 	Token string `json:"token"` // Only returned on creation
 }
 
-// ListTokens returns all IPP tokens for the authenticated user (or all tokens for admin)
+// ListTokensQuery represents query parameters for listing tokens
+type ListTokensQuery struct {
+	Full bool `form:"full" example:"false"` // Admin only: show all tokens
+}
+
+// ListTokens returns all IPP tokens for the authenticated user
 // @Summary List IPP tokens
-// @Description Get all IPP tokens for the authenticated user (admin sees all)
+// @Description Get all IPP tokens for the authenticated user. Admins can use full=true to see all tokens.
 // @Tags tokens
 // @Produce json
 // @Security BearerAuth
+// @Param full query bool false "Show all tokens (admin only)"
 // @Success 200 {array} IPPTokenResponse
 // @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Router /tokens [get]
 func (h *TokenHandler) ListTokens(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	isAdmin := middleware.IsAdmin(c)
 
+	var queryParams ListTokensQuery
+	if err := c.ShouldBindQuery(&queryParams); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// full=true requires admin
+	if queryParams.Full && !isAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "admin access required"})
+		return
+	}
+
 	var tokens []models.IPPToken
 	query := h.db
-	if !isAdmin {
+	if !queryParams.Full || !isAdmin {
+		// Regular mode: show only user's tokens
 		query = query.Where("user_id = ?", userID)
 	}
 	if err := query.Preload("User").Order("created_at DESC").Find(&tokens).Error; err != nil {

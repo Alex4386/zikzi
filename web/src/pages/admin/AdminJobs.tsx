@@ -30,11 +30,11 @@ export default function AdminJobs() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin', 'jobs', page, statusFilter, userFilter],
-    queryFn: () => api.getAdminJobs(
+    queryFn: () => api.getJobs(
       page,
       20,
       statusFilter === 'all' ? undefined : statusFilter,
-      userFilter === 'all' ? undefined : userFilter
+      { full: true, userId: userFilter === 'all' ? undefined : userFilter }
     ),
   })
 

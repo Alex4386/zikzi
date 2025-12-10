@@ -91,7 +91,8 @@
     "allJobs": "All Jobs",
     "orphanedJobs": "Orphaned Jobs",
     "noJobs": "No print jobs yet",
-    "noJobsHint": "Send a document to port 9100 to get started",
+    "noJobsHint": "Set up your printer to start printing",
+    "noJobsSetupLink": "Go to Printer Setup",
     "noJobsFound": "No jobs found",
     "noOrphanedJobs": "No orphaned jobs",
     "allJobsAssigned": "All jobs are assigned to users",
@@ -234,7 +235,17 @@
       "ippAuthNoneWarning": "No authentication methods are enabled. Printing will not be possible via IPP.",
       "allowIPPPassword": "Use my password for IPP",
       "allowIPPPasswordDescription": "Allow using your account password to authenticate print jobs",
-      "ippPasswordDisabledHint": "Your password is disabled for IPP. Use authentication tokens from the \"Auth Tokens\" page instead."
+      "ippPasswordDisabledHint": "Your password is disabled for IPP. Use authentication tokens from the \"Auth Tokens\" page instead.",
+      "ippCredentials": "Your Credentials",
+      "ippCredentialsDescription": "Use these credentials when setting up the printer",
+      "ippUsername": "Username",
+      "ippPassword": "Password",
+      "ippPasswordHint": "Use your account password or an auth token",
+      "ippPasswordHintPasswordOnly": "Use your account password",
+      "ippPasswordHintTokenOnly": "Use an auth token from the Auth Tokens page",
+      "noIpRegistered": "No IP address registered",
+      "noIpRegisteredHint": "Register your IP address to link print jobs to your account",
+      "registerIpLink": "Register IP Address"
     }
   },
   "profile": {

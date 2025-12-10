@@ -35,22 +35,42 @@ type DetectIPResponse struct {
 	IPAddress string `json:"ip_address" example:"192.168.1.100"`
 }
 
-// ListIPs returns all registered IP addresses for the authenticated user (or all IPs for admin)
+// ListIPsQuery represents query parameters for listing IPs
+type ListIPsQuery struct {
+	Full bool `form:"full" example:"false"` // Admin only: show all IPs
+}
+
+// ListIPs returns all registered IP addresses for the authenticated user
 // @Summary List registered IPs
-// @Description Get all IP addresses registered by the authenticated user (admin sees all)
+// @Description Get all IP addresses registered by the authenticated user. Admins can use full=true to see all IPs.
 // @Tags ips
 // @Produce json
 // @Security BearerAuth
+// @Param full query bool false "Show all IPs (admin only)"
 // @Success 200 {array} models.IPRegistration
 // @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Router /ips [get]
 func (h *IPHandler) ListIPs(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	isAdmin := middleware.IsAdmin(c)
 
+	var queryParams ListIPsQuery
+	if err := c.ShouldBindQuery(&queryParams); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// full=true requires admin
+	if queryParams.Full && !isAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "admin access required"})
+		return
+	}
+
 	var ips []models.IPRegistration
 	query := h.db
-	if !isAdmin {
+	if !queryParams.Full || !isAdmin {
+		// Regular mode: show only user's IPs
 		query = query.Where("user_id = ?", userID)
 	}
 	if err := query.Preload("User").Find(&ips).Error; err != nil {

@@ -126,6 +126,7 @@ export default function Dashboard() {
           error={!!error}
           title={t('jobs.noJobs')}
           subtitle={t('jobs.noJobsHint')}
+          showSetupLink={!isLoading && !error}
         />
       ) : viewMode === 'grid' ? (
         <JobsGrid

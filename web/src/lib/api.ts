@@ -58,15 +58,34 @@ class Api {
   }
 
   // Jobs
-  getJobs(page = 1, limit = 20, status?: string) {
+  getJobs(page = 1, limit = 20, status?: string, options?: { full?: boolean; userId?: string }) {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (status) params.set('status', status)
+    if (options?.full) params.set('full', 'true')
+    if (options?.userId) params.set('user_id', options.userId)
     return this.request<{
       jobs: PrintJob[]
       total: number
       page: number
       limit: number
     }>(`/jobs?${params}`)
+  }
+
+  getOrphanedJobs(page = 1, limit = 20) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+    return this.request<{
+      jobs: PrintJob[]
+      total: number
+      page: number
+      limit: number
+    }>(`/jobs/orphaned?${params}`)
+  }
+
+  assignJob(jobId: string, userId: string) {
+    return this.request(`/jobs/${jobId}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    })
   }
 
   getJob(id: string) {
@@ -128,8 +147,11 @@ class Api {
   }
 
   // IPs
-  getIPs() {
-    return this.request<IPRegistration[]>('/ips')
+  getIPs(options?: { full?: boolean }) {
+    const params = new URLSearchParams()
+    if (options?.full) params.set('full', 'true')
+    const query = params.toString() ? `?${params}` : ''
+    return this.request<IPRegistration[]>(`/ips${query}`)
   }
 
   registerIP(ip_address: string, description: string, user_id?: string) {
@@ -155,8 +177,11 @@ class Api {
   }
 
   // IPP Tokens
-  getTokens() {
-    return this.request<IPPToken[]>('/tokens')
+  getTokens(options?: { full?: boolean }) {
+    const params = new URLSearchParams()
+    if (options?.full) params.set('full', 'true')
+    const query = params.toString() ? `?${params}` : ''
+    return this.request<IPPToken[]>(`/tokens${query}`)
   }
 
   createToken(name: string, expire_days?: number, user_id?: string) {
@@ -199,25 +224,8 @@ class Api {
     }>(`/admin/jobs?${params}`)
   }
 
-  getOrphanedJobs(page = 1, limit = 20) {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-    return this.request<{
-      jobs: AdminJob[]
-      total: number
-      page: number
-      limit: number
-    }>(`/admin/jobs/orphaned?${params}`)
-  }
-
   getAdminJob(id: string) {
     return this.request<AdminJob>(`/admin/jobs/${id}`)
-  }
-
-  assignJob(jobId: string, userId: string) {
-    return this.request(`/admin/jobs/${jobId}/assign`, {
-      method: 'POST',
-      body: JSON.stringify({ user_id: userId }),
-    })
   }
 
   // User password change

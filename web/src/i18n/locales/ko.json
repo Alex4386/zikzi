@@ -91,7 +91,8 @@
     "allJobs": "전체 작업",
     "orphanedJobs": "미할당 작업",
     "noJobs": "인쇄 작업이 없습니다",
-    "noJobsHint": "포트 9100으로 문서를 보내서 시작하세요",
+    "noJobsHint": "프린터를 설정하여 인쇄를 시작하세요",
+    "noJobsSetupLink": "프린터 설정으로 이동",
     "noJobsFound": "작업을 찾을 수 없습니다",
     "noOrphanedJobs": "미할당 작업이 없습니다",
     "allJobsAssigned": "모든 작업이 사용자에게 할당되었습니다",
@@ -234,7 +235,17 @@
       "ippAuthNoneWarning": "인증 방법이 활성화되지 않았습니다. IPP를 통한 인쇄가 불가능합니다.",
       "allowIPPPassword": "IPP에 비밀번호 사용",
       "allowIPPPasswordDescription": "계정 비밀번호로 인쇄 작업을 인증할 수 있도록 허용",
-      "ippPasswordDisabledHint": "IPP에 비밀번호가 비활성화되었습니다. 대신 \"인증 토큰\" 페이지의 인증 토큰을 사용하세요."
+      "ippPasswordDisabledHint": "IPP에 비밀번호가 비활성화되었습니다. 대신 \"인증 토큰\" 페이지의 인증 토큰을 사용하세요.",
+      "ippCredentials": "로그인 정보",
+      "ippCredentialsDescription": "프린터 설정 시 이 정보를 사용하세요",
+      "ippUsername": "사용자 이름",
+      "ippPassword": "비밀번호",
+      "ippPasswordHint": "계정 비밀번호 또는 인증 토큰 사용",
+      "ippPasswordHintPasswordOnly": "계정 비밀번호 사용",
+      "ippPasswordHintTokenOnly": "인증 토큰 페이지의 인증 토큰 사용",
+      "noIpRegistered": "등록된 IP 주소가 없습니다",
+      "noIpRegisteredHint": "인쇄 작업을 계정에 연결하려면 IP 주소를 등록하세요",
+      "registerIpLink": "IP 주소 등록"
     }
   },
   "profile": {

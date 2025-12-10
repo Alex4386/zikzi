@@ -105,10 +105,12 @@ func (s *Server) setupRoutes() {
 			{
 				jobHandler := handlers.NewJobHandler(s.db, s.config.Storage)
 				jobs.GET("", jobHandler.ListJobs)
+				jobs.GET("/orphaned", jobHandler.ListOrphanedJobs) // Admin only
 				jobs.GET("/:id", jobHandler.GetJob)
 				jobs.GET("/:id/download", jobHandler.DownloadJob)
 				jobs.GET("/:id/pdf", jobHandler.DownloadPDF)
 				jobs.GET("/:id/thumbnail", jobHandler.GetThumbnail)
+				jobs.POST("/:id/assign", jobHandler.AssignJob) // Admin only
 				jobs.DELETE("/:id", jobHandler.DeleteJob)
 			}
 
