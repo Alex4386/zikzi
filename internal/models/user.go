@@ -32,7 +32,7 @@ type User struct {
 	IsAdmin bool `gorm:"default:false" json:"is_admin"`
 
 	// IPP authentication settings
-	AllowIPPPassword bool `gorm:"default:true" json:"allow_ipp_password"` // Allow using account password for IPP auth
+	AllowIPPPassword bool `gorm:"column:allow_ipp_password;default:true" json:"allow_ipp_password"` // Allow using account password for IPP auth
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
