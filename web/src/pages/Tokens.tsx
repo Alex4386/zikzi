@@ -121,7 +121,7 @@ export default function Tokens() {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : tokens?.length === 0 ? (
+      ) : data?.tokens?.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Key className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p>{t('tokens.noTokens')}</p>
@@ -141,7 +141,7 @@ export default function Tokens() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tokens?.map((token) => (
+              {data?.tokens?.map((token) => (
                 <TableRow key={token.id}>
                   <TableCell className="font-medium">{token.name}</TableCell>
                   <TableCell>{getStatusBadge(token)}</TableCell>

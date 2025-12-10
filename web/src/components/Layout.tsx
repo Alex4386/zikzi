@@ -43,7 +43,7 @@ export default function Layout() {
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
-  const [adminOpen, setAdminOpen] = useState(false)
+  const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'))
 
   const handleLogout = () => {
     logout()

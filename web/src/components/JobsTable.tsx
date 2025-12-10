@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { User, UserPlus } from 'lucide-react'
 import { formatBytes, formatDate } from '@/lib/utils'
 import { statusIcons, statusVariants, JobStatus } from '@/lib/job-utils'
-import { JobThumbnail } from '@/components/JobThumbnail'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -54,7 +53,6 @@ export function JobsTable({ jobs, showUser = false, showOrphaned = false, showSo
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[60px]"></TableHead>
             <TableHead>{t('jobs.document')}</TableHead>
             {showUser && <TableHead>{t('jobs.user')}</TableHead>}
             {showSource && <TableHead>{t('jobs.source')}</TableHead>}
@@ -70,11 +68,6 @@ export function JobsTable({ jobs, showUser = false, showOrphaned = false, showSo
             const StatusIcon = statusIcons[job.status]
             return (
               <TableRow key={job.id}>
-                <TableCell>
-                  <Link to={`/jobs/${job.id}`}>
-                    <JobThumbnail jobId={job.id} jobStatus={job.status} documentName={job.document_name} size="sm" />
-                  </Link>
-                </TableCell>
                 <TableCell>
                   <Link to={`/jobs/${job.id}`} className="hover:text-primary">
                     <p className="font-medium">{job.document_name || t('jobs.untitled')}</p>

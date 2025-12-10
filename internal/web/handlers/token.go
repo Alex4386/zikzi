@@ -45,9 +45,10 @@ type CreateIPPTokenResponse struct {
 
 // ListTokensQuery represents query parameters for listing tokens
 type ListTokensQuery struct {
-	Page  int  `form:"page,default=1" example:"1"`
-	Limit int  `form:"limit,default=20" example:"20"`
-	Full  bool `form:"full" example:"false"` // Admin only: show all tokens
+	Page   int    `form:"page,default=1" example:"1"`
+	Limit  int    `form:"limit,default=20" example:"20"`
+	Full   bool   `form:"full" example:"false"`      // Admin only: show all tokens
+	UserID string `form:"user_id" example:"abc123"` // Admin only: filter by user
 }
 
 // ListTokensResponse represents the paginated tokens response
@@ -81,8 +82,8 @@ func (h *TokenHandler) ListTokens(c *gin.Context) {
 		return
 	}
 
-	// full=true requires admin
-	if queryParams.Full && !isAdmin {
+	// full=true or user_id filter requires admin
+	if (queryParams.Full || queryParams.UserID != "") && !isAdmin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "admin access required"})
 		return
 	}
@@ -103,7 +104,10 @@ func (h *TokenHandler) ListTokens(c *gin.Context) {
 	var total int64
 
 	query := h.db.Model(&models.IPPToken{})
-	if !queryParams.Full || !isAdmin {
+	if queryParams.UserID != "" && isAdmin {
+		// Admin filtering by specific user
+		query = query.Where("user_id = ?", queryParams.UserID)
+	} else if !queryParams.Full || !isAdmin {
 		// Regular mode: show only user's tokens
 		query = query.Where("user_id = ?", userID)
 	}

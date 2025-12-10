@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Loader2, User, Plus, Pencil, Trash2, Key } from 'lucide-react'
+import { Loader2, User, Plus, Trash2, Eye } from 'lucide-react'
 import { api, AdminUser } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { PageContainer } from '@/components/PageContainer'
@@ -28,7 +29,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 
-type DialogMode = 'create' | 'edit' | 'password' | 'delete' | null
+type DialogMode = 'create' | 'delete' | null
 
 export default function AdminUsers() {
   const { t } = useTranslation()
@@ -58,24 +59,6 @@ export default function AdminUsers() {
     onError: (err: Error) => setError(err.message),
   })
 
-  const updateMutation = useMutation({
-    mutationFn: () => api.updateAdminUser(selectedUser!.id, { username, email, display_name: displayName, is_admin: isAdmin }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
-      closeDialog()
-    },
-    onError: (err: Error) => setError(err.message),
-  })
-
-  const passwordMutation = useMutation({
-    mutationFn: () => api.changeUserPassword(selectedUser!.id, password),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
-      closeDialog()
-    },
-    onError: (err: Error) => setError(err.message),
-  })
-
   const deleteMutation = useMutation({
     mutationFn: () => api.deleteUser(selectedUser!.id),
     onSuccess: () => {
@@ -95,23 +78,6 @@ export default function AdminUsers() {
     setDialogMode('create')
   }
 
-  const openEdit = (user: AdminUser) => {
-    setSelectedUser(user)
-    setUsername(user.username)
-    setEmail(user.email)
-    setDisplayName(user.display_name)
-    setIsAdmin(user.is_admin)
-    setError(null)
-    setDialogMode('edit')
-  }
-
-  const openPassword = (user: AdminUser) => {
-    setSelectedUser(user)
-    setPassword('')
-    setError(null)
-    setDialogMode('password')
-  }
-
   const openDelete = (user: AdminUser) => {
     setSelectedUser(user)
     setError(null)
@@ -128,14 +94,10 @@ export default function AdminUsers() {
     e.preventDefault()
     if (dialogMode === 'create') {
       createMutation.mutate()
-    } else if (dialogMode === 'edit') {
-      updateMutation.mutate()
-    } else if (dialogMode === 'password') {
-      passwordMutation.mutate()
     }
   }
 
-  const isPending = createMutation.isPending || updateMutation.isPending || passwordMutation.isPending || deleteMutation.isPending
+  const isPending = createMutation.isPending || deleteMutation.isPending
 
   return (
     <PageContainer>
@@ -177,12 +139,12 @@ export default function AdminUsers() {
               {users?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <Link to={`/admin/users/${user.id}`} className="flex items-center gap-2 hover:text-primary">
                       <div>
                         <p className="font-medium">{user.display_name}</p>
                         <p className="text-sm text-muted-foreground">@{user.username}</p>
                       </div>
-                    </div>
+                    </Link>
                   </TableCell>
                   <TableCell className="text-sm">{user.email}</TableCell>
                   <TableCell>
@@ -196,11 +158,10 @@ export default function AdminUsers() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(user)} title={t('admin.users.editUser')}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openPassword(user)} title={t('admin.users.changePassword')}>
-                        <Key className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" asChild title={t('admin.users.viewUser')}>
+                        <Link to={`/admin/users/${user.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => openDelete(user)} title={t('admin.users.deleteUser')} className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
@@ -214,11 +175,11 @@ export default function AdminUsers() {
         </Card>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogMode === 'create' || dialogMode === 'edit'} onOpenChange={() => closeDialog()}>
+      {/* Create Dialog */}
+      <Dialog open={dialogMode === 'create'} onOpenChange={() => closeDialog()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{dialogMode === 'create' ? t('admin.users.addUser') : t('admin.users.editUser')}</DialogTitle>
+            <DialogTitle>{t('admin.users.addUser')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -248,19 +209,17 @@ export default function AdminUsers() {
                 onChange={(e) => setDisplayName(e.target.value)}
               />
             </div>
-            {dialogMode === 'create' && (
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('admin.users.password')}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="password">{t('admin.users.password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+              />
+            </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="isAdmin"
@@ -277,41 +236,7 @@ export default function AdminUsers() {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? t('common.saving') : dialogMode === 'create' ? t('common.create') : t('common.save')}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Change Password Dialog */}
-      <Dialog open={dialogMode === 'password'} onOpenChange={() => closeDialog()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('admin.users.changePasswordFor', { name: selectedUser?.display_name })}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">{t('admin.users.newPassword')}</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-              />
-              <p className="text-xs text-muted-foreground">{t('profile.passwordMinLength')}</p>
-            </div>
-            {error && (
-              <Note variant="error">
-                {error}
-              </Note>
-            )}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel')}</Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? t('common.saving') : t('admin.users.changePassword')}
+                {isPending ? t('common.saving') : t('common.create')}
               </Button>
             </DialogFooter>
           </form>

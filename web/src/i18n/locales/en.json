@@ -32,6 +32,7 @@
     "create": "Create",
     "active": "Active",
     "inactive": "Inactive",
+    "copied": "Copied!",
     "added": "Added",
     "role": "Role",
     "user": "User",
@@ -286,6 +287,7 @@
       "noUsers": "No users found",
       "addUser": "Add User",
       "editUser": "Edit User",
+      "viewUser": "View User",
       "deleteUser": "Delete User",
       "changePassword": "Change Password",
       "changePasswordFor": "Change Password for {{name}}",
@@ -299,6 +301,18 @@
       "jobCount": "Jobs",
       "failedToLoad": "Failed to load users",
       "deleteConfirm": "Are you sure you want to delete {{name}} (@{{username}})? This action cannot be undone."
+    },
+    "userDetail": {
+      "notFound": "User not found",
+      "backToUsers": "Back to Users",
+      "tabs": {
+        "jobs": "Jobs",
+        "ips": "IP Addresses",
+        "tokens": "Tokens"
+      },
+      "noJobs": "No print jobs for this user",
+      "noIps": "No IP addresses registered",
+      "noTokens": "No authentication tokens"
     },
     "ips": {
       "title": "IP Addresses",
@@ -371,6 +385,8 @@
     "downloadPdf": "Download PDF",
     "downloadOriginal": "Download Original",
     "notFound": "Job not found",
-    "deleteConfirm": "Delete this print job?"
+    "deleteConfirm": "Delete this print job?",
+    "preview": "Preview",
+    "thumbnailAlt": "Document preview"
   }
 }

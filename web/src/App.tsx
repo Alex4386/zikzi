@@ -11,6 +11,7 @@ import Settings from './pages/Settings'
 import Profile from './pages/my/Profile'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
+import AdminUserDetail from './pages/admin/AdminUserDetail'
 import AdminJobs from './pages/admin/AdminJobs'
 import AdminIPs from './pages/admin/AdminIPs'
 import AdminTokens from './pages/admin/AdminTokens'
@@ -74,6 +75,7 @@ function App() {
           <Route path="my/profile" element={<Profile />} />
           <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="admin/users/:id" element={<AdminRoute><AdminUserDetail /></AdminRoute>} />
           <Route path="admin/jobs" element={<AdminRoute><AdminJobs /></AdminRoute>} />
           <Route path="admin/ips" element={<AdminRoute><AdminIPs /></AdminRoute>} />
           <Route path="admin/tokens" element={<AdminRoute><AdminTokens /></AdminRoute>} />

@@ -37,9 +37,10 @@ type DetectIPResponse struct {
 
 // ListIPsQuery represents query parameters for listing IPs
 type ListIPsQuery struct {
-	Page  int  `form:"page,default=1" example:"1"`
-	Limit int  `form:"limit,default=20" example:"20"`
-	Full  bool `form:"full" example:"false"` // Admin only: show all IPs
+	Page   int    `form:"page,default=1" example:"1"`
+	Limit  int    `form:"limit,default=20" example:"20"`
+	Full   bool   `form:"full" example:"false"`      // Admin only: show all IPs
+	UserID string `form:"user_id" example:"abc123"` // Admin only: filter by user
 }
 
 // ListIPsResponse represents the paginated IPs response
@@ -73,8 +74,8 @@ func (h *IPHandler) ListIPs(c *gin.Context) {
 		return
 	}
 
-	// full=true requires admin
-	if queryParams.Full && !isAdmin {
+	// full=true or user_id filter requires admin
+	if (queryParams.Full || queryParams.UserID != "") && !isAdmin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "admin access required"})
 		return
 	}
@@ -95,7 +96,10 @@ func (h *IPHandler) ListIPs(c *gin.Context) {
 	var total int64
 
 	query := h.db.Model(&models.IPRegistration{})
-	if !queryParams.Full || !isAdmin {
+	if queryParams.UserID != "" && isAdmin {
+		// Admin filtering by specific user
+		query = query.Where("user_id = ?", queryParams.UserID)
+	} else if !queryParams.Full || !isAdmin {
 		// Regular mode: show only user's IPs
 		query = query.Where("user_id = ?", userID)
 	}

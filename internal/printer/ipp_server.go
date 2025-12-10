@@ -465,13 +465,13 @@ func (s *IPPServer) handleGetPrinterAttributes(msg *goipp.Message) *goipp.Messag
 	resp.Printer.Add(fmtAttr)
 	resp.Printer.Add(goipp.MakeAttribute("document-format-default", goipp.TagMimeType, goipp.String("application/postscript")))
 
-	// Color support - IMPORTANT: advertise as color printer
+	// Color support - IMPORTANT: advertise as color printer with color as default
 	resp.Printer.Add(goipp.MakeAttribute("color-supported", goipp.TagBoolean, goipp.Boolean(true)))
-	colorModeAttr := goipp.MakeAttribute("print-color-mode-supported", goipp.TagKeyword, goipp.String("auto"))
-	colorModeAttr.Values.Add(goipp.TagKeyword, goipp.String("color"))
+	colorModeAttr := goipp.MakeAttribute("print-color-mode-supported", goipp.TagKeyword, goipp.String("color"))
+	colorModeAttr.Values.Add(goipp.TagKeyword, goipp.String("auto"))
 	colorModeAttr.Values.Add(goipp.TagKeyword, goipp.String("monochrome"))
 	resp.Printer.Add(colorModeAttr)
-	resp.Printer.Add(goipp.MakeAttribute("print-color-mode-default", goipp.TagKeyword, goipp.String("auto")))
+	resp.Printer.Add(goipp.MakeAttribute("print-color-mode-default", goipp.TagKeyword, goipp.String("color")))
 
 	// Charset and language
 	resp.Printer.Add(goipp.MakeAttribute("charset-configured", goipp.TagCharset, goipp.String("utf-8")))

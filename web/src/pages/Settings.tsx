@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Printer, Download, Cable, Wifi, Shield, ArrowRight } from 'lucide-react'
+import { Printer, Download, Cable, Wifi, Shield, ArrowRight, Clipboard } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -54,6 +54,7 @@ export default function Settings() {
   const { t } = useTranslation()
   const { user, refreshUser } = useAuth()
   const [showMacAlert, setShowMacAlert] = useState(false)
+  const [justCopied, setJustCopied] = useState(false)
   const [allowIPPPassword, setAllowIPPPassword] = useState(user?.allow_ipp_password ?? true)
 
   const { data: config } = useQuery<Config>({
@@ -70,7 +71,7 @@ export default function Settings() {
     queryFn: () => api.getIPs(),
   })
 
-  const hasRegisteredIPs = (ips?.length ?? 0) > 0
+  const hasRegisteredIPs = (ips?.ips?.length ?? 0) > 0
 
   // Update local state when user changes
   useEffect(() => {
@@ -265,7 +266,28 @@ export default function Settings() {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between p-2 bg-muted rounded">
                           <span className="text-sm text-muted-foreground">{t('settings.printer.ippUsername')}</span>
-                          <code className="font-mono text-sm text-primary">{user?.username}</code>
+                          <div className="flex items-center gap-2">
+                            <code className="font-mono text-sm text-primary">{user?.username}</code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => {
+                                if (user?.username) {
+                                  navigator.clipboard.writeText(user.username)
+                                  setJustCopied(true)
+                                  setTimeout(() => setJustCopied(false), 2000)
+                                }
+                              }}
+                              disabled={justCopied}
+                            >
+                              {justCopied ? (
+                                <span className="text-xs">{t('common.copied')}</span>
+                              ) : (
+                                <Clipboard className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
                         </div>
                         <div className="flex items-center justify-between p-2 bg-muted rounded">
                           <span className="text-sm text-muted-foreground">{t('settings.printer.ippPassword')}</span>

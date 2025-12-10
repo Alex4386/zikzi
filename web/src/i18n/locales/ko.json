@@ -32,6 +32,7 @@
     "create": "생성",
     "active": "활성",
     "inactive": "비활성",
+    "copied": "복사됨!",
     "added": "추가됨",
     "role": "역할",
     "user": "사용자",
@@ -286,6 +287,7 @@
       "noUsers": "사용자를 찾을 수 없습니다",
       "addUser": "사용자 추가",
       "editUser": "사용자 편집",
+      "viewUser": "사용자 보기",
       "deleteUser": "사용자 삭제",
       "changePassword": "비밀번호 변경",
       "changePasswordFor": "{{name}}의 비밀번호 변경",
@@ -299,6 +301,18 @@
       "jobCount": "작업 수",
       "failedToLoad": "사용자를 불러오는데 실패했습니다",
       "deleteConfirm": "정말로 {{name}} (@{{username}})을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+    },
+    "userDetail": {
+      "notFound": "사용자를 찾을 수 없습니다",
+      "backToUsers": "사용자 목록으로",
+      "tabs": {
+        "jobs": "작업",
+        "ips": "IP 주소",
+        "tokens": "토큰"
+      },
+      "noJobs": "이 사용자의 인쇄 작업이 없습니다",
+      "noIps": "등록된 IP 주소가 없습니다",
+      "noTokens": "인증 토큰이 없습니다"
     },
     "ips": {
       "title": "IP 주소",
@@ -371,6 +385,8 @@
     "downloadPdf": "PDF 다운로드",
     "downloadOriginal": "원본 다운로드",
     "notFound": "작업을 찾을 수 없습니다",
-    "deleteConfirm": "이 인쇄 작업을 삭제하시겠습니까?"
+    "deleteConfirm": "이 인쇄 작업을 삭제하시겠습니까?",
+    "preview": "미리보기",
+    "thumbnailAlt": "문서 미리보기"
   }
 }

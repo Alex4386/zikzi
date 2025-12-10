@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Download, Trash2, FileText, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react'
+import { ArrowLeft, Download, Trash2, FileText, CheckCircle, Clock, AlertCircle, Loader2, ChevronDown, Image } from 'lucide-react'
 import { api } from '@/lib/api'
 import { formatBytes, formatDate } from '@/lib/utils'
 import { PageContainer } from '@/components/PageContainer'
@@ -10,6 +10,7 @@ import { Note } from '@/components/Note'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
 const statusConfig = {
   received: { icon: Clock, variant: 'warning' as const },
@@ -24,6 +25,7 @@ export default function JobDetail() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [downloading, setDownloading] = useState<'pdf' | 'original' | null>(null)
+  const [thumbnailOpen, setThumbnailOpen] = useState(false)
 
   const { data: job, isLoading, error } = useQuery({
     queryKey: ['job', id],
@@ -187,6 +189,34 @@ export default function JobDetail() {
           </div>
         </CardContent>
       </Card>
+
+      {job.status === 'completed' && (
+        <Collapsible open={thumbnailOpen} onOpenChange={setThumbnailOpen} className="mt-4">
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <span className="flex items-center gap-2">
+                <Image className="h-4 w-4" />
+                {t('jobDetail.preview')}
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${thumbnailOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <Card>
+              <CardContent className="p-4">
+                <img
+                  src={api.getJobDownloadUrl(job.id, 'thumbnail')}
+                  alt={t('jobDetail.thumbnailAlt')}
+                  className="max-w-full h-auto mx-auto rounded shadow-sm"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
     </PageContainer>
   )
 }
