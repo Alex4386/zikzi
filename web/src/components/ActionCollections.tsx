@@ -184,16 +184,16 @@ export function ActionCollections({
         );
       }
 
-      return (
-        <DropdownMenuItem
-          onClick={action.type === 'button' ? action.onClick : undefined}
-          disabled={action.disabled}
-          variant={action.variant === 'destructive' ? 'destructive' : 'default'}
-          className="flex gap-2 items-center"
-        >
-          {itemContent}
-        </DropdownMenuItem>
-      );
+      <DropdownMenuItem
+        onClick={action.type === 'button' ? action.onClick : undefined}
+        disabled={action.disabled}
+        className={cn(
+          "flex gap-2 items-center",
+          action.variant === 'destructive' && "text-destructive focus:text-destructive focus:bg-destructive/10"
+        )}
+      >
+        {itemContent}
+      </DropdownMenuItem>
     }
 
     const renderButton = (showLabel = true) => {
@@ -205,23 +205,33 @@ export function ActionCollections({
           {showLabel && action.label}
         </>
       );
-
-      const TargetTag =
-        action.type === 'link' && action.href.startsWith('http') ? 'a' : Link;
       const commonClassName = cn(action.className, 'flex gap-4 items-center');
 
       const button =
         action.type === 'link' ? (
-          <TargetTag {...(action.href.startsWith('http') ? { href: action.href } : { to: action.href })}>
-            <Button
-              className={commonClassName}
-              disabled={action.disabled}
-              variant={action.variant ?? 'outline'}
-              size={showLabel ? 'default' : 'icon'}
-            >
-              {buttonContent}
-            </Button>
-          </TargetTag>
+          action.href.startsWith('http') ? (
+            <a href={action.href}>
+              <Button
+                className={commonClassName}
+                disabled={action.disabled}
+                variant={action.variant ?? 'outline'}
+                size={showLabel ? 'default' : 'icon'}
+              >
+                {buttonContent}
+              </Button>
+            </a>
+          ) : (
+            <Link to={action.href}>
+              <Button
+                className={commonClassName}
+                disabled={action.disabled}
+                variant={action.variant ?? 'outline'}
+                size={showLabel ? 'default' : 'icon'}
+              >
+                {buttonContent}
+              </Button>
+            </Link>
+          )
         ) : action.type === 'button' ? (
           <Button
             className={commonClassName}
