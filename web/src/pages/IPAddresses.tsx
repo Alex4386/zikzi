@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { ActionCollections } from '@/components/ActionCollections'
 
 type DialogMode = 'create' | 'edit' | null
 
@@ -150,33 +151,36 @@ export default function IPAddresses() {
                   <TableCell className="font-mono">{ip.ip_address}</TableCell>
                   <TableCell className="text-muted-foreground">{ip.description || '-'}</TableCell>
                   <TableCell>
-                    <Badge variant={ip.is_active ? 'success' : 'secondary'}>
+                    <Badge variant={ip.is_active ? 'success' : 'secondary'} className="whitespace-nowrap">
                       {ip.is_active ? t('common.active') : t('common.inactive')}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                     {new Date(ip.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openEdit(ip)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (confirm(t('ipAddresses.delete.confirm'))) {
-                          deleteMutation.mutate(ip.id)
-                        }
-                      }}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <ActionCollections
+                      actions={[
+                        {
+                          type: 'button',
+                          label: t('common.edit'),
+                          Icon: Pencil,
+                          onClick: () => openEdit(ip),
+                        },
+                        {
+                          type: 'button',
+                          label: t('common.delete'),
+                          Icon: Trash2,
+                          variant: 'destructive',
+                          onClick: () => {
+                            if (confirm(t('ipAddresses.delete.confirm'))) {
+                              deleteMutation.mutate(ip.id)
+                            }
+                          },
+                          disabled: deleteMutation.isPending,
+                        },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

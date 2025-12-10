@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { ActionCollections, ActionCollectionItem } from '@/components/ActionCollections'
 
 const statusConfig = {
   received: { icon: Clock, variant: 'warning' as const },
@@ -26,6 +27,7 @@ export default function JobDetail() {
   const queryClient = useQueryClient()
   const [downloading, setDownloading] = useState<'pdf' | 'original' | null>(null)
   const [thumbnailOpen, setThumbnailOpen] = useState(false)
+
 
   const { data: job, isLoading, error } = useQuery({
     queryKey: ['job', id],
@@ -104,18 +106,18 @@ export default function JobDetail() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-muted rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="p-3 bg-muted rounded-lg shrink-0">
                 <FileText className="h-8 w-8 text-primary" />
               </div>
-              <div>
-                <CardTitle className="text-2xl">{job.document_name || t('jobDetail.untitled')}</CardTitle>
-                <p className="text-muted-foreground">{job.app_name || t('jobDetail.unknownApp')}</p>
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-2xl break-words">{job.document_name || t('jobDetail.untitled')}</CardTitle>
+                <p className="text-muted-foreground truncate">{job.app_name || t('jobDetail.unknownApp')}</p>
               </div>
             </div>
 
-            <Badge variant={status.variant} className="gap-1">
+            <Badge variant={status.variant} className="gap-1 bg-background border whitespace-nowrap self-start sm:self-auto">
               <StatusIcon className={`h-4 w-4 ${job.status === 'processing' ? 'animate-spin' : ''}`} />
               <span className="capitalize">{t(`jobs.status.${job.status}`)}</span>
             </Badge>
@@ -156,36 +158,36 @@ export default function JobDetail() {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t">
-            {job.status === 'completed' && (
-              <Button onClick={() => handleDownload('pdf')} disabled={downloading !== null}>
-                {downloading === 'pdf' ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4 mr-2" />
-                )}
-                {t('jobDetail.downloadPdf')}
-              </Button>
-            )}
-            {(job.status === 'completed' || job.status === 'failed') && (
-              <Button variant="secondary" onClick={() => handleDownload('original')} disabled={downloading !== null}>
-                {downloading === 'original' ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4 mr-2" />
-                )}
-                {t('jobDetail.downloadOriginal')}
-              </Button>
-            )}
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-              className="ml-auto"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {t('common.delete')}
-            </Button>
+          <div className="flex gap-3 pt-4 border-t justify-end">
+            <ActionCollections
+              actions={[
+                ...(job.status === 'completed' ? [{
+                  type: 'button',
+                  label: t('jobDetail.downloadPdf'),
+                  Icon: Download,
+                  onClick: () => handleDownload('pdf'),
+                  disabled: downloading !== null,
+                  spinIcon: downloading === 'pdf',
+                } as ActionCollectionItem] : []),
+                ...((job.status === 'completed' || job.status === 'failed') ? [{
+                  type: 'button',
+                  label: t('jobDetail.downloadOriginal'),
+                  Icon: Download,
+                  onClick: () => handleDownload('original'),
+                  disabled: downloading !== null,
+                  spinIcon: downloading === 'original',
+                } as ActionCollectionItem] : []),
+                {
+                  type: 'button',
+                  label: t('common.delete'),
+                  Icon: Trash2,
+                  variant: 'destructive',
+                  onClick: handleDelete,
+                  disabled: deleteMutation.isPending,
+                  isLoading: deleteMutation.isPending,
+                } as ActionCollectionItem
+              ]}
+            />
           </div>
         </CardContent>
       </Card>

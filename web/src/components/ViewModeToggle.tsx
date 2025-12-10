@@ -18,6 +18,7 @@ export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
       type="single"
       value={value}
       onValueChange={(v) => v && onChange(v as 'grid' | 'table')}
+      className="shrink-0"
     >
       <ToggleGroupItem value="grid" aria-label={t('view.grid')}>
         <LayoutGrid className="h-4 w-4" />
