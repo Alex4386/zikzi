@@ -2,6 +2,10 @@ package printer
 
 import (
 	"context"
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net"
@@ -9,12 +13,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/OpenPrinting/goipp"
 	"github.com/alex4386/zikzi/internal/config"
 	"github.com/alex4386/zikzi/internal/logger"
 	"github.com/alex4386/zikzi/internal/models"
+	"github.com/alex4386/zikzi/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -28,6 +34,64 @@ const (
 	OpCancelJob        goipp.Op = 0x0008
 )
 
+// Digest auth nonce cache (nonce -> expiry time)
+type nonceCache struct {
+	mu     sync.RWMutex
+	nonces map[string]time.Time
+}
+
+func newNonceCache() *nonceCache {
+	nc := &nonceCache{
+		nonces: make(map[string]time.Time),
+	}
+	// Start cleanup goroutine
+	go nc.cleanup()
+	return nc
+}
+
+func (nc *nonceCache) generate() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	nonce := hex.EncodeToString(b)
+
+	nc.mu.Lock()
+	nc.nonces[nonce] = time.Now().Add(5 * time.Minute)
+	nc.mu.Unlock()
+
+	return nonce
+}
+
+func (nc *nonceCache) isValid(nonce string) bool {
+	nc.mu.RLock()
+	expiry, exists := nc.nonces[nonce]
+	nc.mu.RUnlock()
+
+	if !exists {
+		return false
+	}
+	return time.Now().Before(expiry)
+}
+
+func (nc *nonceCache) invalidate(nonce string) {
+	nc.mu.Lock()
+	delete(nc.nonces, nonce)
+	nc.mu.Unlock()
+}
+
+func (nc *nonceCache) cleanup() {
+	ticker := time.NewTicker(1 * time.Minute)
+	for range ticker.C {
+		nc.mu.Lock()
+		now := time.Now()
+		for nonce, expiry := range nc.nonces {
+			if now.After(expiry) {
+				delete(nc.nonces, nonce)
+			}
+		}
+		nc.mu.Unlock()
+	}
+}
+
 // IPPServer handles IPP protocol requests
 type IPPServer struct {
 	config         config.IPPConfig
@@ -38,6 +102,7 @@ type IPPServer struct {
 	httpServer     *http.Server
 	printerURI     string
 	trustedProxies []*net.IPNet
+	nonceCache     *nonceCache
 }
 
 // NewIPPServer creates a new IPP server instance
@@ -48,6 +113,7 @@ func NewIPPServer(cfg config.IPPConfig, printerCfg config.PrinterConfig, storage
 		storage:     storage,
 		db:          db,
 		ghostscript: NewGhostScript(storage.GhostscriptBin),
+		nonceCache:  newNonceCache(),
 	}
 
 	// Parse trusted proxies
@@ -174,17 +240,44 @@ func (s *IPPServer) handleIPP(w http.ResponseWriter, r *http.Request) {
 	clientIP := s.getClientIP(r)
 	logger.Debug("IPP: %s from %s (op: 0x%04x)", goipp.Op(msg.Code).String(), clientIP, msg.Code)
 
+	// Check if operation requires authentication
+	requiresAuth := s.operationRequiresAuth(goipp.Op(msg.Code))
+
+	var auth authResult
+	if requiresAuth {
+		var needsChallenge bool
+		auth, needsChallenge = s.authenticateRequest(r, clientIP)
+
+		if !auth.authenticated {
+			if needsChallenge {
+				// Send auth challenge - client should retry with credentials
+				logger.Debug("IPP: Sending auth challenge for %s from %s", goipp.Op(msg.Code).String(), clientIP)
+				s.sendAuthChallenge(w)
+				return
+			}
+			// No auth methods available/configured, and IP auth failed
+			if !s.printerCfg.AllowUnregisteredIPs {
+				logger.Warn("IPP: Rejected %s from unauthenticated client: %s", goipp.Op(msg.Code).String(), clientIP)
+				s.sendResponse(w, s.makeResponse(goipp.StatusErrorNotAuthorized, msg.RequestID))
+				return
+			}
+			// AllowUnregisteredIPs is true - allow anonymous access
+		} else {
+			logger.Debug("IPP: Authenticated via %s for user %s", auth.method, auth.userID)
+		}
+	}
+
 	// Route to appropriate handler
 	var resp *goipp.Message
 	switch goipp.Op(msg.Code) {
 	case OpPrintJob:
-		resp = s.handlePrintJob(r, &msg, body, clientIP)
+		resp = s.handlePrintJob(r, &msg, body, clientIP, auth)
 	case OpValidateJob:
 		resp = s.handleValidateJob(&msg)
 	case OpGetPrinterAttrs:
 		resp = s.handleGetPrinterAttributes(&msg)
 	case OpGetJobs:
-		resp = s.handleGetJobs(&msg, clientIP)
+		resp = s.handleGetJobs(&msg, clientIP, auth)
 	case OpGetJobAttributes:
 		resp = s.handleGetJobAttributes(&msg)
 	case OpCancelJob:
@@ -198,8 +291,39 @@ func (s *IPPServer) handleIPP(w http.ResponseWriter, r *http.Request) {
 	s.sendResponse(w, resp)
 }
 
+// operationRequiresAuth returns true if the IPP operation requires authentication
+func (s *IPPServer) operationRequiresAuth(op goipp.Op) bool {
+	switch op {
+	case OpPrintJob, OpValidateJob, OpGetJobs, OpCancelJob:
+		return true
+	case OpGetPrinterAttrs, OpGetJobAttributes:
+		// These are informational and typically don't require auth
+		return false
+	default:
+		return true
+	}
+}
+
+// getAdvertisedAuthMethods returns the list of authentication methods to advertise
+func (s *IPPServer) getAdvertisedAuthMethods() []string {
+	var methods []string
+
+	// "requesting-user-name" is always implied when IP auth is used
+	if s.config.Auth.AllowIP {
+		methods = append(methods, "requesting-user-name")
+	}
+
+	// HTTP Basic and Digest authentication
+	if s.config.Auth.AllowLogin {
+		methods = append(methods, "basic")
+		methods = append(methods, "digest")
+	}
+
+	return methods
+}
+
 // handlePrintJob processes Print-Job requests
-func (s *IPPServer) handlePrintJob(r *http.Request, msg *goipp.Message, body []byte, clientIP string) *goipp.Message {
+func (s *IPPServer) handlePrintJob(r *http.Request, msg *goipp.Message, body []byte, clientIP string, auth authResult) *goipp.Message {
 	// Extract document data - it comes after the IPP attributes
 	docData := s.extractDocumentData(body)
 	if len(docData) == 0 {
@@ -231,13 +355,9 @@ func (s *IPPServer) handlePrintJob(r *http.Request, msg *goipp.Message, body []b
 		}
 	}
 
-	// Try to find user by registered IP
-	var ipReg models.IPRegistration
-	if err := s.db.Where("ip_address = ? AND is_active = ?", clientIP, true).First(&ipReg).Error; err == nil {
-		job.UserID = ipReg.UserID
-	} else if !s.printerCfg.AllowUnregisteredIPs {
-		logger.Warn("IPP: Rejected print job from unregistered IP: %s", clientIP)
-		return s.makeResponse(goipp.StatusErrorNotAuthorized, msg.RequestID)
+	// Use authenticated user ID if available
+	if auth.authenticated && auth.userID != "" {
+		job.UserID = auth.userID
 	}
 
 	if err := s.db.Create(job).Error; err != nil {
@@ -309,7 +429,18 @@ func (s *IPPServer) handleGetPrinterAttributes(msg *goipp.Message) *goipp.Messag
 	// Printer identification
 	resp.Printer.Add(goipp.MakeAttribute("printer-uri-supported", goipp.TagURI, goipp.String(s.printerURI)))
 	resp.Printer.Add(goipp.MakeAttribute("uri-security-supported", goipp.TagKeyword, goipp.String("none")))
-	resp.Printer.Add(goipp.MakeAttribute("uri-authentication-supported", goipp.TagKeyword, goipp.String("none")))
+
+	// Advertise authentication methods based on configuration
+	authMethods := s.getAdvertisedAuthMethods()
+	if len(authMethods) > 0 {
+		authAttr := goipp.MakeAttribute("uri-authentication-supported", goipp.TagKeyword, goipp.String(authMethods[0]))
+		for _, method := range authMethods[1:] {
+			authAttr.Values.Add(goipp.TagKeyword, goipp.String(method))
+		}
+		resp.Printer.Add(authAttr)
+	} else {
+		resp.Printer.Add(goipp.MakeAttribute("uri-authentication-supported", goipp.TagKeyword, goipp.String("none")))
+	}
 	resp.Printer.Add(goipp.MakeAttribute("requesting-user-name-supported", goipp.TagBoolean, goipp.Boolean(true)))
 	resp.Printer.Add(goipp.MakeAttribute("printer-name", goipp.TagName, goipp.String("Zikzi Printer")))
 	resp.Printer.Add(goipp.MakeAttribute("printer-info", goipp.TagText, goipp.String("Zikzi Multi-User Printing Server")))
@@ -368,17 +499,16 @@ func (s *IPPServer) handleGetPrinterAttributes(msg *goipp.Message) *goipp.Messag
 }
 
 // handleGetJobs returns a list of jobs
-func (s *IPPServer) handleGetJobs(msg *goipp.Message, clientIP string) *goipp.Message {
+func (s *IPPServer) handleGetJobs(msg *goipp.Message, clientIP string, auth authResult) *goipp.Message {
 	resp := s.makeResponse(goipp.StatusOk, msg.RequestID)
 
 	// Get jobs from database (limit to 100)
 	var jobs []models.PrintJob
 	query := s.db.Order("created_at DESC").Limit(100)
 
-	// Try to filter by user if IP is registered
-	var ipReg models.IPRegistration
-	if err := s.db.Where("ip_address = ? AND is_active = ?", clientIP, true).First(&ipReg).Error; err == nil {
-		query = query.Where("user_id = ?", ipReg.UserID)
+	// Filter by authenticated user if available
+	if auth.authenticated && auth.userID != "" {
+		query = query.Where("user_id = ?", auth.userID)
 	}
 
 	query.Find(&jobs)
@@ -592,4 +722,245 @@ func (s *IPPServer) getClientIP(r *http.Request) string {
 	}
 
 	return remoteIP
+}
+
+// authResult represents the result of an authentication attempt
+type authResult struct {
+	authenticated bool
+	userID        string
+	method        string // "ip", "basic", "digest"
+}
+
+// authenticateRequest attempts to authenticate the request using configured methods
+// Returns: authResult with user info, and whether auth challenge should be sent
+func (s *IPPServer) authenticateRequest(r *http.Request, clientIP string) (authResult, bool) {
+	result := authResult{}
+
+	// Try IP-based authentication first (if enabled)
+	if s.config.Auth.AllowIP {
+		var ipReg models.IPRegistration
+		if err := s.db.Where("ip_address = ? AND is_active = ?", clientIP, true).First(&ipReg).Error; err == nil {
+			result.authenticated = true
+			result.userID = ipReg.UserID
+			result.method = "ip"
+			return result, false
+		}
+	}
+
+	// Try HTTP authentication (if enabled)
+	if s.config.Auth.AllowLogin {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader != "" {
+			if strings.HasPrefix(authHeader, "Basic ") {
+				if user := s.authenticateBasic(authHeader); user != nil {
+					result.authenticated = true
+					result.userID = user.ID
+					result.method = "basic"
+					return result, false
+				}
+			} else if strings.HasPrefix(authHeader, "Digest ") {
+				if user := s.authenticateDigest(r, authHeader); user != nil {
+					result.authenticated = true
+					result.userID = user.ID
+					result.method = "digest"
+					return result, false
+				}
+			}
+		}
+		// Auth header missing or invalid - should send challenge
+		return result, true
+	}
+
+	// No authentication methods succeeded or available
+	return result, false
+}
+
+// authenticateBasic handles HTTP Basic authentication
+// Supports: username/password OR username/token
+func (s *IPPServer) authenticateBasic(authHeader string) *models.User {
+	// Decode base64 credentials
+	encoded := strings.TrimPrefix(authHeader, "Basic ")
+	decoded, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return nil
+	}
+
+	parts := strings.SplitN(string(decoded), ":", 2)
+	if len(parts) != 2 {
+		return nil
+	}
+
+	username := parts[0]
+	credential := parts[1]
+
+	// Find user by username
+	var user models.User
+	if err := s.db.Where("username = ?", username).First(&user).Error; err != nil {
+		return nil
+	}
+
+	// Try password authentication first (if user allows it)
+	if user.PasswordHash != "" && user.AllowIPPPassword && utils.VerifyPassword(user.PasswordHash, credential) {
+		return &user
+	}
+
+	// Try IPP token authentication
+	var tokens []models.IPPToken
+	if err := s.db.Where("user_id = ? AND is_active = ?", user.ID, true).Find(&tokens).Error; err == nil {
+		for _, token := range tokens {
+			if token.IsValid() && models.VerifyIPPToken(token.Token, credential) {
+				// Update last used info
+				now := time.Now()
+				token.LastUsedAt = &now
+				s.db.Save(&token)
+				return &user
+			}
+		}
+	}
+
+	return nil
+}
+
+// authenticateDigest handles HTTP Digest authentication
+func (s *IPPServer) authenticateDigest(r *http.Request, authHeader string) *models.User {
+	// Parse digest auth header
+	params := parseDigestAuth(strings.TrimPrefix(authHeader, "Digest "))
+	if params == nil {
+		return nil
+	}
+
+	username := params["username"]
+	nonce := params["nonce"]
+	uri := params["uri"]
+	clientResponse := params["response"]
+	nc := params["nc"]
+	cnonce := params["cnonce"]
+	qop := params["qop"]
+
+	// Validate nonce
+	if !s.nonceCache.isValid(nonce) {
+		logger.Debug("IPP: Digest auth failed - invalid or expired nonce")
+		return nil
+	}
+
+	// Find user
+	var user models.User
+	if err := s.db.Where("username = ?", username).First(&user).Error; err != nil {
+		logger.Debug("IPP: Digest auth failed - user not found: %s", username)
+		return nil
+	}
+
+	realm := s.config.Auth.Realm
+
+	// Try password authentication if user has DigestHA1 stored and allows password auth
+	// Note: DigestHA1 must be pre-computed and stored when password is set
+	if user.DigestHA1 != "" && user.AllowIPPPassword {
+		expectedResponse := computeDigestResponse(
+			user.DigestHA1,
+			nonce, nc, cnonce, qop,
+			r.Method, uri,
+		)
+
+		if expectedResponse == clientResponse {
+			logger.Debug("IPP: Digest auth succeeded for user %s via password", username)
+			return &user
+		}
+	}
+
+	// Try IPP tokens - compute HA1 dynamically using plaintext token
+	var tokens []models.IPPToken
+	if err := s.db.Where("user_id = ? AND is_active = ?", user.ID, true).Find(&tokens).Error; err == nil {
+		for _, token := range tokens {
+			if !token.IsValid() {
+				continue
+			}
+
+			// Compute HA1 dynamically: MD5(username:realm:token)
+			ha1 := computeDigestHA1(username, realm, token.Token)
+
+			// Compute expected response
+			expectedResponse := computeDigestResponse(
+				ha1,
+				nonce, nc, cnonce, qop,
+				r.Method, uri,
+			)
+
+			if expectedResponse == clientResponse {
+				// Update last used info
+				now := time.Now()
+				token.LastUsedAt = &now
+				s.db.Save(&token)
+
+				logger.Debug("IPP: Digest auth succeeded for user %s via token", username)
+				return &user
+			}
+		}
+	}
+
+	logger.Debug("IPP: Digest auth failed - no valid credential matched for user %s", username)
+	return nil
+}
+
+// parseDigestAuth parses a Digest authentication header into a map
+func parseDigestAuth(header string) map[string]string {
+	result := make(map[string]string)
+	// Parse key="value" or key=value pairs
+	parts := strings.Split(header, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		idx := strings.Index(part, "=")
+		if idx == -1 {
+			continue
+		}
+		key := strings.TrimSpace(part[:idx])
+		value := strings.TrimSpace(part[idx+1:])
+		// Remove quotes if present
+		if len(value) >= 2 && value[0] == '"' && value[len(value)-1] == '"' {
+			value = value[1 : len(value)-1]
+		}
+		result[key] = value
+	}
+	return result
+}
+
+// sendAuthChallenge sends WWW-Authenticate headers for Basic and Digest auth
+func (s *IPPServer) sendAuthChallenge(w http.ResponseWriter) {
+	realm := s.config.Auth.Realm
+	nonce := s.nonceCache.generate()
+
+	// Offer both Basic and Digest authentication
+	// Basic is simpler and works well over HTTPS
+	w.Header().Add("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, realm))
+
+	// Digest provides better security over HTTP (password not sent in clear)
+	w.Header().Add("WWW-Authenticate", fmt.Sprintf(
+		`Digest realm="%s", nonce="%s", qop="auth", algorithm=MD5`,
+		realm, nonce,
+	))
+
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
+// computeDigestHA1 computes the HA1 hash for digest authentication
+func computeDigestHA1(username, realm, password string) string {
+	h := md5.Sum([]byte(username + ":" + realm + ":" + password))
+	return hex.EncodeToString(h[:])
+}
+
+// computeDigestResponse computes the expected digest response
+func computeDigestResponse(ha1, nonce, nc, cnonce, qop, method, uri string) string {
+	ha2 := md5.Sum([]byte(method + ":" + uri))
+	ha2Hex := hex.EncodeToString(ha2[:])
+
+	var response string
+	if qop == "auth" || qop == "auth-int" {
+		data := ha1 + ":" + nonce + ":" + nc + ":" + cnonce + ":" + qop + ":" + ha2Hex
+		h := md5.Sum([]byte(data))
+		response = hex.EncodeToString(h[:])
+	} else {
+		data := ha1 + ":" + nonce + ":" + ha2Hex
+		h := md5.Sum([]byte(data))
+		response = hex.EncodeToString(h[:])
+	}
+	return response
 }

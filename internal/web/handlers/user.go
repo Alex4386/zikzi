@@ -145,3 +145,45 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "password updated"})
 }
+
+// UpdateIPPSettingsRequest represents the request to update IPP settings
+type UpdateIPPSettingsRequest struct {
+	AllowIPPPassword bool `json:"allow_ipp_password"`
+}
+
+// UpdateIPPSettings updates the authenticated user's IPP authentication settings
+// @Summary Update IPP settings
+// @Description Update whether the user's password can be used for IPP authentication
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body UpdateIPPSettingsRequest true "IPP settings data"
+// @Success 200 {object} models.User
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Router /users/me/ipp-settings [put]
+func (h *UserHandler) UpdateIPPSettings(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+
+	var req UpdateIPPSettingsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user models.User
+	if err := h.db.First(&user, "id = ?", userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	user.AllowIPPPassword = req.AllowIPPPassword
+	if err := h.db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update settings"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}

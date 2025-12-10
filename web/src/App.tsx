@@ -6,6 +6,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import JobDetail from './pages/JobDetail'
 import IPAddresses from './pages/IPAddresses'
+import Tokens from './pages/Tokens'
 import Settings from './pages/Settings'
 import Profile from './pages/my/Profile'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -67,6 +68,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="jobs/:id" element={<JobDetail />} />
           <Route path="ips" element={<IPAddresses />} />
+          <Route path="tokens" element={<Tokens />} />
           <Route path="settings" element={<Settings />} />
           <Route path="my/profile" element={<Profile />} />
           <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

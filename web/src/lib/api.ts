@@ -47,13 +47,7 @@ class Api {
 
   // Users
   getCurrentUser() {
-    return this.request<{
-      id: string
-      username: string
-      email: string
-      display_name: string
-      is_admin: boolean
-    }>('/users/me')
+    return this.request<User>('/users/me')
   }
 
   updateUser(data: { display_name?: string; email?: string }) {
@@ -160,6 +154,30 @@ class Api {
     return this.request<{ ip_address: string }>('/ips/detect')
   }
 
+  // IPP Tokens
+  getTokens() {
+    return this.request<IPPToken[]>('/tokens')
+  }
+
+  createToken(name: string, expire_days?: number, user_id?: string) {
+    return this.request<CreateIPPTokenResponse>('/tokens', {
+      method: 'POST',
+      body: JSON.stringify({ name, expire_days, user_id }),
+    })
+  }
+
+  revokeToken(id: string) {
+    return this.request<{ message: string }>(`/tokens/${id}/revoke`, {
+      method: 'POST',
+    })
+  }
+
+  deleteToken(id: string) {
+    return this.request<{ message: string }>(`/tokens/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Admin endpoints
   getAdminStats() {
     return this.request<AdminStats>('/admin/stats')
@@ -210,6 +228,14 @@ class Api {
     })
   }
 
+  // User IPP settings
+  updateIPPSettings(allowIPPPassword: boolean) {
+    return this.request<User>('/users/me/ipp-settings', {
+      method: 'PUT',
+      body: JSON.stringify({ allow_ipp_password: allowIPPPassword }),
+    })
+  }
+
   // Admin user management
   createUser(data: { username: string; email: string; password: string; display_name?: string; is_admin?: boolean }) {
     return this.request<AdminUser>('/admin/users', {
@@ -243,6 +269,15 @@ class Api {
   }
 }
 
+export interface User {
+  id: string
+  username: string
+  email: string
+  display_name: string
+  is_admin: boolean
+  allow_ipp_password: boolean
+}
+
 export interface PrintJob {
   id: string
   created_at: string
@@ -271,6 +306,21 @@ export interface IPRegistration {
   ip_address: string
   description: string
   is_active: boolean
+}
+
+export interface IPPToken {
+  id: string
+  created_at: string
+  user_id: string
+  name: string
+  last_used_at?: string
+  last_used_ip?: string
+  expires_at?: string
+  is_active: boolean
+}
+
+export interface CreateIPPTokenResponse extends IPPToken {
+  token: string // Only returned on creation
 }
 
 export interface AdminStats {

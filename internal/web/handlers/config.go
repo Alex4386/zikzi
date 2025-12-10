@@ -19,12 +19,20 @@ func NewConfigHandler(cfg *config.Config) *ConfigHandler {
 
 // ConfigResponse represents public configuration
 type ConfigResponse struct {
-	PrinterExternalHostname string `json:"printer_external_hostname" example:"printer.example.com"`
-	IPPPort                 int    `json:"ipp_port" example:"631"`
-	RawPort                 int    `json:"raw_port" example:"9100"`
-	AllowLocal              bool   `json:"allow_local" example:"true"`
-	SSOEnabled              bool   `json:"sso_enabled" example:"false"`
-	PrinterInsecure         bool   `json:"printer_insecure" example:"false"`
+	PrinterExternalHostname string            `json:"printer_external_hostname" example:"printer.example.com"`
+	IPPPort                 int               `json:"ipp_port" example:"631"`
+	IPPEnabled              bool              `json:"ipp_enabled" example:"true"`
+	IPPAuth                 IPPAuthResponse   `json:"ipp_auth"`
+	RawPort                 int               `json:"raw_port" example:"9100"`
+	AllowLocal              bool              `json:"allow_local" example:"true"`
+	SSOEnabled              bool              `json:"sso_enabled" example:"false"`
+	PrinterInsecure         bool              `json:"printer_insecure" example:"false"`
+}
+
+// IPPAuthResponse represents IPP authentication configuration
+type IPPAuthResponse struct {
+	AllowIP    bool `json:"allow_ip" example:"true"`
+	AllowLogin bool `json:"allow_login" example:"true"`
 }
 
 // GetPublicConfig returns public configuration
@@ -38,9 +46,14 @@ func (h *ConfigHandler) GetPublicConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, ConfigResponse{
 		PrinterExternalHostname: h.config.Printer.ExternalHostname,
 		IPPPort:                 h.config.IPP.Port,
-		RawPort:                 h.config.Printer.Port,
-		AllowLocal:              h.config.Auth.AllowLocal,
-		SSOEnabled:              h.config.Auth.OIDC.Enabled,
-		PrinterInsecure:         h.config.Printer.Insecure,
+		IPPEnabled:              h.config.IPP.Enabled,
+		IPPAuth: IPPAuthResponse{
+			AllowIP:    h.config.IPP.Auth.AllowIP,
+			AllowLogin: h.config.IPP.Auth.AllowLogin,
+		},
+		RawPort:         h.config.Printer.Port,
+		AllowLocal:      h.config.Auth.AllowLocal,
+		SSOEnabled:      h.config.Auth.OIDC.Enabled,
+		PrinterInsecure: h.config.Printer.Insecure,
 	})
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Printer, Network, LogOut, FileText, User, ChevronUp, ChevronDown, Sun, Moon, Monitor, Languages, Cog } from 'lucide-react'
+import { Printer, Network, LogOut, FileText, User, ChevronUp, ChevronDown, Sun, Moon, Monitor, Languages, Cog, Key } from 'lucide-react'
 import { Shield, Users, AlertTriangle, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/components/theme-provider'
@@ -53,6 +53,7 @@ export default function Layout() {
   const navItems = [
     { to: '/', icon: FileText, label: t('nav.printJobs') },
     { to: '/ips', icon: Network, label: t('nav.ipAddresses') },
+    { to: '/tokens', icon: Key, label: t('nav.tokens') },
     { to: '/settings', icon: Cog, label: t('nav.settings') },
   ]
 

@@ -7,6 +7,7 @@ interface User {
   email: string
   display_name: string
   is_admin: boolean
+  allow_ipp_password: boolean
 }
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>
   register: (username: string, email: string, password: string, displayName: string) => Promise<void>
   logout: () => void
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -69,8 +71,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('token')
   }
 
+  const refreshUser = async () => {
+    if (token) {
+      try {
+        const userData = await api.getCurrentUser()
+        setUser(userData)
+      } catch {
+        // Ignore errors during refresh
+      }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ token, user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ token, user, isLoading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

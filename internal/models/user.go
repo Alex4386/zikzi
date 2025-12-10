@@ -19,6 +19,7 @@ type User struct {
 
 	// Local auth (optional)
 	PasswordHash string `json:"-"`
+	DigestHA1    string `json:"-"` // Pre-computed MD5(username:realm:password) for Digest auth
 
 	// OIDC fields
 	OIDCSubject  string `gorm:"column:oidc_subject;index" json:"-"`
@@ -29,6 +30,9 @@ type User struct {
 	IPRegistrations []IPRegistration `gorm:"foreignKey:UserID" json:"-"`
 
 	IsAdmin bool `gorm:"default:false" json:"is_admin"`
+
+	// IPP authentication settings
+	AllowIPPPassword bool `gorm:"default:true" json:"allow_ipp_password"` // Allow using account password for IPP auth
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

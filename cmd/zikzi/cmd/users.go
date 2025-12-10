@@ -175,6 +175,15 @@ func runUsersAdd(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to hash password: %v", err)
 	}
 
+	// Load config to get IPP auth realm
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	// Compute DigestHA1 for HTTP Digest authentication
+	digestHA1 := utils.ComputeDigestHA1(username, cfg.IPP.Auth.Realm, password)
+
 	// Use display name from flag or default to username
 	displayName := addDisplayName
 	if displayName == "" {
@@ -187,6 +196,7 @@ func runUsersAdd(cmd *cobra.Command, args []string) {
 		Email:        addEmail,
 		DisplayName:  displayName,
 		PasswordHash: passwordHash,
+		DigestHA1:    digestHA1,
 		IsAdmin:      addIsAdmin,
 	}
 
@@ -327,7 +337,17 @@ func runUsersSetPassword(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to hash password: %v", err)
 	}
 
+	// Load config to get IPP auth realm
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	// Compute DigestHA1 for HTTP Digest authentication
+	digestHA1 := utils.ComputeDigestHA1(username, cfg.IPP.Auth.Realm, password)
+
 	user.PasswordHash = passwordHash
+	user.DigestHA1 = digestHA1
 	if err := db.Save(&user).Error; err != nil {
 		log.Fatalf("Failed to update password: %v", err)
 	}

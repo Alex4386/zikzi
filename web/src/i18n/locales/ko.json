@@ -45,6 +45,7 @@
   "nav": {
     "printJobs": "인쇄 작업",
     "ipAddresses": "IP 주소",
+    "tokens": "인증 토큰",
     "settings": "설정",
     "admin": "관리자",
     "dashboard": "대시보드",
@@ -194,6 +195,8 @@
       "description": "계정 설정을 관리합니다"
     },
     "printer": {
+      "rawTab": "RAW (소켓)",
+      "ippTab": "IPP",
       "connectTitle": "프린터 연결",
       "connectDescription": "이 서버를 가리키는 RAW PostScript 프린터를 추가하세요",
       "rawSocketAddress": "RAW 소켓 주소",
@@ -210,7 +213,28 @@
       "windowsNote": "Windows: 우클릭하고 \"관리자 권한으로 실행\"",
       "macLinuxNote": "macOS/Linux: IPP 자동 검색 또는 수동으로 프린터 추가",
       "insecureWarningTitle": "보안되지 않은 연결",
-      "insecureWarningDescription": "프린터 연결이 암호화되지 않아 모든 인쇄 데이터가 인터넷을 통해 평문으로 전송되어, 트래픽을 가로챌 수 있는 누구나 문서 내용을 볼 수 있습니다. 민감한 정보를 인쇄하지 마세요."
+      "insecureWarningDescription": "프린터 연결이 암호화되지 않아 모든 인쇄 데이터가 인터넷을 통해 평문으로 전송되어, 트래픽을 가로챌 수 있는 누구나 문서 내용을 볼 수 있습니다. 민감한 정보를 인쇄하지 마세요.",
+      "macOSRecommendation": "macOS 감지됨",
+      "macOSRecommendationDescription": "macOS에서 최상의 경험을 위해 IPP (인터넷 인쇄 프로토콜)를 사용하는 것을 권장합니다. 시스템 인쇄 대화상자와 더 잘 통합됩니다.",
+      "ippConnectTitle": "IPP로 연결",
+      "ippConnectDescription": "최신 OS 통합을 위한 IPP 프린터 추가",
+      "ippAddress": "IPP 주소",
+      "ippManualSetup": "수동 설정 안내:",
+      "ippStep1": "시스템 프린터 설정을 엽니다",
+      "ippStep2": "새 프린터 추가 → IP 또는 네트워크 프린터",
+      "ippStep3": "IPP URL 입력: {{url}}",
+      "ippStep4": "PostScript 또는 일반 드라이버 선택",
+      "ippAuthTitle": "인증",
+      "ippAuthDescription": "IPP로 장치가 인증하는 방법을 구성합니다",
+      "ippAuthIP": "IP 기반 인증",
+      "ippAuthIPDescription": "등록된 IP 주소를 사용하여 자동으로 인증",
+      "ippAuthPassword": "비밀번호 인증",
+      "ippAuthPasswordDescription": "사용자 이름과 비밀번호 또는 인증 토큰을 사용하여 인증",
+      "ippAuthPasswordHint": "계정 비밀번호를 사용하거나 \"인증 토큰\" 페이지에서 인증 토큰을 생성하여 인쇄 요청을 인증하세요.",
+      "ippAuthNoneWarning": "인증 방법이 활성화되지 않았습니다. IPP를 통한 인쇄가 불가능합니다.",
+      "allowIPPPassword": "IPP에 비밀번호 사용",
+      "allowIPPPasswordDescription": "계정 비밀번호로 인쇄 작업을 인증할 수 있도록 허용",
+      "ippPasswordDisabledHint": "IPP에 비밀번호가 비활성화되었습니다. 대신 \"인증 토큰\" 페이지의 인증 토큰을 사용하세요."
     }
   },
   "profile": {
@@ -279,6 +303,44 @@
       "deleteConfirm": "정말로 IP {{ip}}을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
       "assignToUser": "사용자에게 할당",
       "selectUser": "사용자 선택"
+    }
+  },
+  "tokens": {
+    "title": "인증 토큰",
+    "description": "프린터 접근을 위한 IPP 인증 토큰을 관리합니다",
+    "createToken": "토큰 생성",
+    "noTokens": "인증 토큰이 없습니다",
+    "noTokensHint": "장치에서 인쇄 요청을 인증하려면 토큰을 생성하세요",
+    "tokenName": "토큰 이름",
+    "tokenNamePlaceholder": "예: 사무실 프린터, 집 데스크탑",
+    "expireDays": "만료 기간 (일)",
+    "expireDaysPlaceholder": "만료 없음은 비워두세요",
+    "expireDaysHint": "0으로 설정하거나 비워두면 만료되지 않습니다",
+    "lastUsed": "마지막 사용",
+    "expires": "만료일",
+    "never": "없음",
+    "revoked": "폐기됨",
+    "expired": "만료됨",
+    "create": {
+      "title": "새 토큰 생성",
+      "description": "IPP 접근을 위한 새 인증 토큰을 생성합니다",
+      "createButton": "토큰 생성"
+    },
+    "created": {
+      "title": "토큰 생성됨",
+      "description": "새 인증 토큰이 성공적으로 생성되었습니다.",
+      "warning": "지금 토큰을 복사하세요. 다시 볼 수 없습니다!",
+      "tokenValue": "토큰",
+      "usage": "사용 방법",
+      "usageHint": "인쇄할 때 이 토큰을 비밀번호로 사용하세요. 사용자 이름은 동일하게 유지됩니다.",
+      "done": "완료"
+    },
+    "revoke": {
+      "title": "토큰 폐기",
+      "confirm": "이 토큰을 폐기하시겠습니까? 더 이상 인증에 사용할 수 없습니다."
+    },
+    "delete": {
+      "confirm": "이 토큰을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
     }
   },
   "view": {

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -27,13 +27,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+type DialogMode = 'create' | 'edit' | null
+
 export default function IPAddresses() {
   const { t } = useTranslation()
-  const [showForm, setShowForm] = useState(false)
+  const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [ipAddress, setIpAddress] = useState('')
   const [description, setDescription] = useState('')
   const [editingIp, setEditingIp] = useState<IPRegistration | null>(null)
-  const [editDescription, setEditDescription] = useState('')
   const queryClient = useQueryClient()
 
   const { data: ips, isLoading } = useQuery({
@@ -52,9 +53,7 @@ export default function IPAddresses() {
     mutationFn: () => api.registerIP(ipAddress, description),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ips'] })
-      setShowForm(false)
-      setIpAddress('')
-      setDescription('')
+      closeDialog()
     },
   })
 
@@ -70,27 +69,43 @@ export default function IPAddresses() {
       api.updateIP(id, description),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ips'] })
-      setEditingIp(null)
-      setEditDescription('')
+      closeDialog()
     },
   })
 
-  const handleEdit = (ip: IPRegistration) => {
+  const openCreate = () => {
+    setIpAddress('')
+    setDescription('')
+    setEditingIp(null)
+    setDialogMode('create')
+  }
+
+  const openEdit = (ip: IPRegistration) => {
     setEditingIp(ip)
-    setEditDescription(ip.description || '')
+    setDescription(ip.description || '')
+    setDialogMode('edit')
   }
 
-  const handleUpdateSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (editingIp) {
-      updateMutation.mutate({ id: editingIp.id, description: editDescription })
-    }
+  const closeDialog = () => {
+    setDialogMode(null)
+    setEditingIp(null)
+    setIpAddress('')
+    setDescription('')
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     addMutation.mutate()
   }
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editingIp) {
+      updateMutation.mutate({ id: editingIp.id, description })
+    }
+  }
+
+  const isPending = addMutation.isPending || updateMutation.isPending
 
   return (
     <PageContainer>
@@ -101,81 +116,11 @@ export default function IPAddresses() {
             {t('ipAddresses.description')}
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" />
           {t('ipAddresses.addIp')}
         </Button>
       </div>
-
-      {showForm && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>{t('ipAddresses.add.title')}</CardTitle>
-            <CardDescription>{t('ipAddresses.add.description')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="ipAddress">{t('ipAddresses.ipAddress')}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="ipAddress"
-                    type="text"
-                    value={ipAddress}
-                    onChange={(e) => setIpAddress(e.target.value)}
-                    placeholder="192.168.1.100"
-                    required
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => detectMutation.mutate()}
-                    disabled={detectMutation.isPending}
-                  >
-                    <Wifi className="h-4 w-4 mr-2" />
-                    {detectMutation.isPending ? t('ipAddresses.add.detecting') : t('ipAddresses.add.detectMyIp')}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">{t('common.description')} ({t('common.description').toLowerCase()})</Label>
-                <Input
-                  id="description"
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t('ipAddresses.labelPlaceholder')}
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button type="submit" disabled={addMutation.isPending}>
-                  {addMutation.isPending ? t('common.adding') : t('ipAddresses.add.addIpAddress')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false)
-                    setIpAddress('')
-                    setDescription('')
-                  }}
-                >
-                  {t('common.cancel')}
-                </Button>
-              </div>
-
-              {addMutation.error && (
-                <Note variant="error">
-                  {addMutation.error instanceof Error ? addMutation.error.message : t('common.failedToAdd')}
-                </Note>
-              )}
-            </form>
-          </CardContent>
-        </Card>
-      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -216,7 +161,7 @@ export default function IPAddresses() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleEdit(ip)}
+                      onClick={() => openEdit(ip)}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -240,8 +185,69 @@ export default function IPAddresses() {
         </Card>
       )}
 
+      {/* Create IP Dialog */}
+      <Dialog open={dialogMode === 'create'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('ipAddresses.add.title')}</DialogTitle>
+            <DialogDescription>{t('ipAddresses.add.description')}</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ipAddress">{t('ipAddresses.ipAddress')}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="ipAddress"
+                  type="text"
+                  value={ipAddress}
+                  onChange={(e) => setIpAddress(e.target.value)}
+                  placeholder="192.168.1.100"
+                  required
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => detectMutation.mutate()}
+                  disabled={detectMutation.isPending}
+                >
+                  <Wifi className="h-4 w-4 mr-2" />
+                  {detectMutation.isPending ? t('ipAddresses.add.detecting') : t('ipAddresses.add.detectMyIp')}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">{t('common.description')}</Label>
+              <Input
+                id="description"
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t('ipAddresses.labelPlaceholder')}
+              />
+            </div>
+
+            {addMutation.error && (
+              <Note variant="error">
+                {addMutation.error instanceof Error ? addMutation.error.message : t('common.failedToAdd')}
+              </Note>
+            )}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={closeDialog}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {addMutation.isPending ? t('common.adding') : t('ipAddresses.add.addIpAddress')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit IP Dialog */}
-      <Dialog open={!!editingIp} onOpenChange={(open) => !open && setEditingIp(null)}>
+      <Dialog open={dialogMode === 'edit'} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('ipAddresses.edit.title')}</DialogTitle>
@@ -249,29 +255,27 @@ export default function IPAddresses() {
               {t('ipAddresses.edit.description', { ip: editingIp?.ip_address })}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdateSubmit}>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="editDescription">{t('common.description')}</Label>
-                <Input
-                  id="editDescription"
-                  type="text"
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  placeholder={t('ipAddresses.labelPlaceholder')}
-                />
-              </div>
-              {updateMutation.error && (
-                <Note variant="error">
-                  {updateMutation.error instanceof Error ? updateMutation.error.message : t('common.failedToSave')}
-                </Note>
-              )}
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="editDescription">{t('common.description')}</Label>
+              <Input
+                id="editDescription"
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t('ipAddresses.labelPlaceholder')}
+              />
             </div>
+            {updateMutation.error && (
+              <Note variant="error">
+                {updateMutation.error instanceof Error ? updateMutation.error.message : t('common.failedToSave')}
+              </Note>
+            )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditingIp(null)}>
+              <Button type="button" variant="outline" onClick={closeDialog}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={updateMutation.isPending}>
+              <Button type="submit" disabled={isPending}>
                 {updateMutation.isPending ? t('common.saving') : t('common.save')}
               </Button>
             </DialogFooter>

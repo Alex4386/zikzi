@@ -45,6 +45,7 @@
   "nav": {
     "printJobs": "Print Jobs",
     "ipAddresses": "IP Addresses",
+    "tokens": "Auth Tokens",
     "settings": "Settings",
     "admin": "Admin",
     "dashboard": "Dashboard",
@@ -194,6 +195,8 @@
       "description": "Manage your account settings"
     },
     "printer": {
+      "rawTab": "RAW (Socket)",
+      "ippTab": "IPP",
       "connectTitle": "Connect Your Printer",
       "connectDescription": "Add a RAW PostScript printer pointing to this server",
       "rawSocketAddress": "RAW Socket Address",
@@ -210,7 +213,28 @@
       "windowsNote": "Windows: Right-click and \"Run as administrator\"",
       "macLinuxNote": "macOS/Linux: Use IPP auto-discovery or add printer manually",
       "insecureWarningTitle": "Insecure Connection",
-      "insecureWarningDescription": "The printer connection is unencrypted. All print data is transmitted in plaintext over the internet, allowing anyone who can intercept the traffic to see the contents of your documents."
+      "insecureWarningDescription": "The printer connection is unencrypted. All print data is transmitted in plaintext over the internet, allowing anyone who can intercept the traffic to see the contents of your documents.",
+      "macOSRecommendation": "macOS Detected",
+      "macOSRecommendationDescription": "For the best experience on macOS, we recommend using IPP (Internet Printing Protocol). It provides better integration with the system print dialog.",
+      "ippConnectTitle": "Connect via IPP",
+      "ippConnectDescription": "Add an IPP printer for modern OS integration",
+      "ippAddress": "IPP Address",
+      "ippManualSetup": "Manual Setup Instructions:",
+      "ippStep1": "Open your system's printer settings",
+      "ippStep2": "Add a new printer → IP or Network printer",
+      "ippStep3": "Enter the IPP URL: {{url}}",
+      "ippStep4": "Select a PostScript or Generic driver",
+      "ippAuthTitle": "Authentication",
+      "ippAuthDescription": "Configure how devices can authenticate with IPP",
+      "ippAuthIP": "IP-based Authentication",
+      "ippAuthIPDescription": "Authenticate automatically using registered IP addresses",
+      "ippAuthPassword": "Password Authentication",
+      "ippAuthPasswordDescription": "Authenticate using username and password or auth tokens",
+      "ippAuthPasswordHint": "Use your account password or create an auth token in the \"Auth Tokens\" page to authenticate print requests.",
+      "ippAuthNoneWarning": "No authentication methods are enabled. Printing will not be possible via IPP.",
+      "allowIPPPassword": "Use my password for IPP",
+      "allowIPPPasswordDescription": "Allow using your account password to authenticate print jobs",
+      "ippPasswordDisabledHint": "Your password is disabled for IPP. Use authentication tokens from the \"Auth Tokens\" page instead."
     }
   },
   "profile": {
@@ -279,6 +303,44 @@
       "deleteConfirm": "Are you sure you want to delete IP {{ip}}? This action cannot be undone.",
       "assignToUser": "Assign to User",
       "selectUser": "Select a user"
+    }
+  },
+  "tokens": {
+    "title": "Authentication Tokens",
+    "description": "Manage IPP authentication tokens for printer access",
+    "createToken": "Create Token",
+    "noTokens": "No authentication tokens",
+    "noTokensHint": "Create a token to authenticate print requests from your devices",
+    "tokenName": "Token Name",
+    "tokenNamePlaceholder": "e.g., Office Printer, Home Desktop",
+    "expireDays": "Expiration (days)",
+    "expireDaysPlaceholder": "Leave empty for no expiration",
+    "expireDaysHint": "Set to 0 or leave empty for tokens that never expire",
+    "lastUsed": "Last Used",
+    "expires": "Expires",
+    "never": "Never",
+    "revoked": "Revoked",
+    "expired": "Expired",
+    "create": {
+      "title": "Create New Token",
+      "description": "Create a new authentication token for IPP access",
+      "createButton": "Create Token"
+    },
+    "created": {
+      "title": "Token Created",
+      "description": "Your new authentication token has been created successfully.",
+      "warning": "Make sure to copy your token now. You won't be able to see it again!",
+      "tokenValue": "Token",
+      "usage": "Usage",
+      "usageHint": "Use this token as your password when printing. Your username remains the same.",
+      "done": "Done"
+    },
+    "revoke": {
+      "title": "Revoke Token",
+      "confirm": "Are you sure you want to revoke this token? It will no longer work for authentication."
+    },
+    "delete": {
+      "confirm": "Are you sure you want to delete this token? This action cannot be undone."
     }
   },
   "view": {

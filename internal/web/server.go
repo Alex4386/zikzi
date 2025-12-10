@@ -97,6 +97,7 @@ func (s *Server) setupRoutes() {
 				users.GET("/me", userHandler.GetCurrentUser)
 				users.PUT("/me", userHandler.UpdateCurrentUser)
 				users.PUT("/me/password", userHandler.ChangePassword)
+				users.PUT("/me/ipp-settings", userHandler.UpdateIPPSettings)
 			}
 
 			// Print jobs routes
@@ -120,6 +121,17 @@ func (s *Server) setupRoutes() {
 				ips.PUT("/:id", ipHandler.UpdateIP)
 				ips.DELETE("/:id", ipHandler.DeleteIP)
 				ips.GET("/detect", ipHandler.DetectIP)
+			}
+
+			// IPP token routes
+			tokens := protected.Group("/tokens")
+			{
+				tokenHandler := handlers.NewTokenHandler(s.db)
+				tokens.GET("", tokenHandler.ListTokens)
+				tokens.POST("", tokenHandler.CreateToken)
+				tokens.GET("/:id", tokenHandler.GetToken)
+				tokens.POST("/:id/revoke", tokenHandler.RevokeToken)
+				tokens.DELETE("/:id", tokenHandler.DeleteToken)
 			}
 		}
 

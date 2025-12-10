@@ -34,11 +34,18 @@ type PrinterConfig struct {
 }
 
 type IPPConfig struct {
-	Enabled        bool     `mapstructure:"enabled"`
-	Port           int      `mapstructure:"port"`
-	Host           string   `mapstructure:"host"`
-	TrustProxy     bool     `mapstructure:"trust_proxy"`      // Trust X-Forwarded-For headers
-	TrustedProxies []string `mapstructure:"trusted_proxies"`  // List of trusted proxy IPs/CIDRs
+	Enabled        bool          `mapstructure:"enabled"`
+	Port           int           `mapstructure:"port"`
+	Host           string        `mapstructure:"host"`
+	TrustProxy     bool          `mapstructure:"trust_proxy"`     // Trust X-Forwarded-For headers
+	TrustedProxies []string      `mapstructure:"trusted_proxies"` // List of trusted proxy IPs/CIDRs
+	Auth           IPPAuthConfig `mapstructure:"auth"`
+}
+
+type IPPAuthConfig struct {
+	AllowIP    bool   `mapstructure:"allow_ip"`    // Allow IP-based authentication (default: true)
+	AllowLogin bool   `mapstructure:"allow_login"` // Allow Basic/Digest authentication (default: true)
+	Realm      string `mapstructure:"realm"`       // HTTP Digest auth realm
 }
 
 type DatabaseConfig struct {
@@ -95,6 +102,9 @@ func Load() (*Config, error) {
 	viper.SetDefault("ipp.port", 631)
 	viper.SetDefault("ipp.host", "0.0.0.0")
 	viper.SetDefault("ipp.trust_proxy", false)
+	viper.SetDefault("ipp.auth.allow_ip", true)
+	viper.SetDefault("ipp.auth.allow_login", true)
+	viper.SetDefault("ipp.auth.realm", "zikzi")
 	viper.SetDefault("database.driver", "sqlite")
 	viper.SetDefault("database.dsn", "zikzi.db")
 	viper.SetDefault("auth.allow_local", true)
