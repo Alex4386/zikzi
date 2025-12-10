@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, Key, Loader2, Ban, Copy, Check } from 'lucide-react'
 import { api, IPPToken, CreateIPPTokenResponse, AdminUser } from '@/lib/api'
 import { PageContainer } from '@/components/PageContainer'
+import { JobsPagination } from '@/components/JobsPagination'
 import { Note } from '@/components/Note'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,6 +39,7 @@ type DialogMode = 'create' | 'created' | null
 
 export default function AdminTokens() {
   const { t } = useTranslation()
+  const [page, setPage] = useState(1)
   const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [tokenName, setTokenName] = useState('')
   const [expireDays, setExpireDays] = useState<string>('')
@@ -46,9 +48,9 @@ export default function AdminTokens() {
   const [copied, setCopied] = useState(false)
   const queryClient = useQueryClient()
 
-  const { data: tokens, isLoading } = useQuery({
-    queryKey: ['admin', 'tokens'],
-    queryFn: () => api.getTokens({ full: true }),
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin', 'tokens', page],
+    queryFn: () => api.getTokens(page, 20, { full: true }),
   })
 
   const { data: users } = useQuery({
@@ -151,7 +153,7 @@ export default function AdminTokens() {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : tokens?.length === 0 ? (
+      ) : data?.tokens?.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Key className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p>{t('tokens.noTokens')}</p>
@@ -172,7 +174,7 @@ export default function AdminTokens() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tokens?.map((token) => (
+              {data?.tokens?.map((token) => (
                 <TableRow key={token.id}>
                   <TableCell className="font-medium">{token.name}</TableCell>
                   <TableCell>{getUserDisplay(token.user_id)}</TableCell>
@@ -227,6 +229,15 @@ export default function AdminTokens() {
             </TableBody>
           </Table>
         </Card>
+      )}
+
+      {data && (
+        <JobsPagination
+          page={page}
+          pageSize={20}
+          total={data.total}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Create Token Dialog */}

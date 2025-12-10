@@ -147,11 +147,15 @@ class Api {
   }
 
   // IPs
-  getIPs(options?: { full?: boolean }) {
-    const params = new URLSearchParams()
+  getIPs(page = 1, limit = 20, options?: { full?: boolean }) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (options?.full) params.set('full', 'true')
-    const query = params.toString() ? `?${params}` : ''
-    return this.request<IPRegistration[]>(`/ips${query}`)
+    return this.request<{
+      ips: IPRegistration[]
+      total: number
+      page: number
+      limit: number
+    }>(`/ips?${params}`)
   }
 
   registerIP(ip_address: string, description: string, user_id?: string) {
@@ -177,11 +181,15 @@ class Api {
   }
 
   // IPP Tokens
-  getTokens(options?: { full?: boolean }) {
-    const params = new URLSearchParams()
+  getTokens(page = 1, limit = 20, options?: { full?: boolean }) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (options?.full) params.set('full', 'true')
-    const query = params.toString() ? `?${params}` : ''
-    return this.request<IPPToken[]>(`/tokens${query}`)
+    return this.request<{
+      tokens: IPPToken[]
+      total: number
+      page: number
+      limit: number
+    }>(`/tokens?${params}`)
   }
 
   createToken(name: string, expire_days?: number, user_id?: string) {

@@ -5,6 +5,7 @@ import { Loader2, Network, Plus, Pencil, Trash2, MapPin } from 'lucide-react'
 import { api, IPRegistration, AdminUser } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { PageContainer } from '@/components/PageContainer'
+import { JobsPagination } from '@/components/JobsPagination'
 import { Note } from '@/components/Note'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -40,6 +41,7 @@ type DialogMode = 'create' | 'edit' | 'delete' | null
 export default function AdminIPs() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const [page, setPage] = useState(1)
   const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [selectedIP, setSelectedIP] = useState<IPRegistration | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -50,9 +52,9 @@ export default function AdminIPs() {
   const [userId, setUserId] = useState('')
   const [isDetecting, setIsDetecting] = useState(false)
 
-  const { data: ips, isLoading, error: fetchError } = useQuery({
-    queryKey: ['admin', 'ips'],
-    queryFn: () => api.getIPs({ full: true }),
+  const { data, isLoading, error: fetchError } = useQuery({
+    queryKey: ['admin', 'ips', page],
+    queryFn: () => api.getIPs(page, 20, { full: true }),
   })
 
   const { data: users } = useQuery({
@@ -155,7 +157,7 @@ export default function AdminIPs() {
         <div className="text-center py-12 text-destructive">
           {t('admin.ips.failedToLoad')}
         </div>
-      ) : ips?.length === 0 ? (
+      ) : data?.ips?.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Network className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p>{t('admin.ips.noIps')}</p>
@@ -174,7 +176,7 @@ export default function AdminIPs() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ips?.map((ip) => (
+              {data?.ips?.map((ip) => (
                 <TableRow key={ip.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -218,6 +220,15 @@ export default function AdminIPs() {
             </TableBody>
           </Table>
         </Card>
+      )}
+
+      {data && (
+        <JobsPagination
+          page={page}
+          pageSize={20}
+          total={data.total}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Create Dialog */}

@@ -37,7 +37,7 @@ export default function IPAddresses() {
   const [editingIp, setEditingIp] = useState<IPRegistration | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: ips, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['ips'],
     queryFn: () => api.getIPs(),
   })
@@ -126,7 +126,7 @@ export default function IPAddresses() {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : ips?.length === 0 ? (
+      ) : data?.ips?.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Network className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p>{t('ipAddresses.noAddresses')}</p>
@@ -145,7 +145,7 @@ export default function IPAddresses() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ips?.map((ip) => (
+              {data?.ips?.map((ip) => (
                 <TableRow key={ip.id}>
                   <TableCell className="font-mono">{ip.ip_address}</TableCell>
                   <TableCell className="text-muted-foreground">{ip.description || '-'}</TableCell>

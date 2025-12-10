@@ -38,7 +38,7 @@ export default function Tokens() {
   const [copied, setCopied] = useState(false)
   const queryClient = useQueryClient()
 
-  const { data: tokens, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['tokens'],
     queryFn: () => api.getTokens(),
   })

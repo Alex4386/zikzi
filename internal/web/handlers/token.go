@@ -45,17 +45,29 @@ type CreateIPPTokenResponse struct {
 
 // ListTokensQuery represents query parameters for listing tokens
 type ListTokensQuery struct {
-	Full bool `form:"full" example:"false"` // Admin only: show all tokens
+	Page  int  `form:"page,default=1" example:"1"`
+	Limit int  `form:"limit,default=20" example:"20"`
+	Full  bool `form:"full" example:"false"` // Admin only: show all tokens
+}
+
+// ListTokensResponse represents the paginated tokens response
+type ListTokensResponse struct {
+	Tokens []IPPTokenResponse `json:"tokens"`
+	Total  int64              `json:"total" example:"100"`
+	Page   int                `json:"page" example:"1"`
+	Limit  int                `json:"limit" example:"20"`
 }
 
 // ListTokens returns all IPP tokens for the authenticated user
 // @Summary List IPP tokens
-// @Description Get all IPP tokens for the authenticated user. Admins can use full=true to see all tokens.
+// @Description Get paginated list of IPP tokens for the authenticated user. Admins can use full=true to see all tokens.
 // @Tags tokens
 // @Produce json
 // @Security BearerAuth
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(20)
 // @Param full query bool false "Show all tokens (admin only)"
-// @Success 200 {array} IPPTokenResponse
+// @Success 200 {object} ListTokensResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 403 {object} ErrorResponse
 // @Router /tokens [get]
@@ -75,13 +87,30 @@ func (h *TokenHandler) ListTokens(c *gin.Context) {
 		return
 	}
 
+	if queryParams.Limit > 100 {
+		queryParams.Limit = 100
+	}
+	if queryParams.Limit == 0 {
+		queryParams.Limit = 20
+	}
+	if queryParams.Page == 0 {
+		queryParams.Page = 1
+	}
+
+	offset := (queryParams.Page - 1) * queryParams.Limit
+
 	var tokens []models.IPPToken
-	query := h.db
+	var total int64
+
+	query := h.db.Model(&models.IPPToken{})
 	if !queryParams.Full || !isAdmin {
 		// Regular mode: show only user's tokens
 		query = query.Where("user_id = ?", userID)
 	}
-	if err := query.Preload("User").Order("created_at DESC").Find(&tokens).Error; err != nil {
+
+	query.Count(&total)
+
+	if err := query.Preload("User").Order("created_at DESC").Offset(offset).Limit(queryParams.Limit).Find(&tokens).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch tokens"})
 		return
 	}
@@ -101,7 +130,12 @@ func (h *TokenHandler) ListTokens(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{
+		"tokens": response,
+		"total":  total,
+		"page":   queryParams.Page,
+		"limit":  queryParams.Limit,
+	})
 }
 
 // CreateToken creates a new IPP token for the authenticated user

@@ -37,17 +37,29 @@ type DetectIPResponse struct {
 
 // ListIPsQuery represents query parameters for listing IPs
 type ListIPsQuery struct {
-	Full bool `form:"full" example:"false"` // Admin only: show all IPs
+	Page  int  `form:"page,default=1" example:"1"`
+	Limit int  `form:"limit,default=20" example:"20"`
+	Full  bool `form:"full" example:"false"` // Admin only: show all IPs
+}
+
+// ListIPsResponse represents the paginated IPs response
+type ListIPsResponse struct {
+	IPs   []models.IPRegistration `json:"ips"`
+	Total int64                   `json:"total" example:"100"`
+	Page  int                     `json:"page" example:"1"`
+	Limit int                     `json:"limit" example:"20"`
 }
 
 // ListIPs returns all registered IP addresses for the authenticated user
 // @Summary List registered IPs
-// @Description Get all IP addresses registered by the authenticated user. Admins can use full=true to see all IPs.
+// @Description Get paginated list of IP addresses registered by the authenticated user. Admins can use full=true to see all IPs.
 // @Tags ips
 // @Produce json
 // @Security BearerAuth
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(20)
 // @Param full query bool false "Show all IPs (admin only)"
-// @Success 200 {array} models.IPRegistration
+// @Success 200 {object} ListIPsResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 403 {object} ErrorResponse
 // @Router /ips [get]
@@ -67,18 +79,40 @@ func (h *IPHandler) ListIPs(c *gin.Context) {
 		return
 	}
 
+	if queryParams.Limit > 100 {
+		queryParams.Limit = 100
+	}
+	if queryParams.Limit == 0 {
+		queryParams.Limit = 20
+	}
+	if queryParams.Page == 0 {
+		queryParams.Page = 1
+	}
+
+	offset := (queryParams.Page - 1) * queryParams.Limit
+
 	var ips []models.IPRegistration
-	query := h.db
+	var total int64
+
+	query := h.db.Model(&models.IPRegistration{})
 	if !queryParams.Full || !isAdmin {
 		// Regular mode: show only user's IPs
 		query = query.Where("user_id = ?", userID)
 	}
-	if err := query.Preload("User").Find(&ips).Error; err != nil {
+
+	query.Count(&total)
+
+	if err := query.Preload("User").Order("created_at DESC").Offset(offset).Limit(queryParams.Limit).Find(&ips).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch IPs"})
 		return
 	}
 
-	c.JSON(http.StatusOK, ips)
+	c.JSON(http.StatusOK, gin.H{
+		"ips":   ips,
+		"total": total,
+		"page":  queryParams.Page,
+		"limit": queryParams.Limit,
+	})
 }
 
 // RegisterIP registers a new IP address for the authenticated user
