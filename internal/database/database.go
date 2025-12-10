@@ -39,10 +39,5 @@ func Migrate(db *gorm.DB) error {
 	); err != nil {
 		return err
 	}
-
-	// Migration: Set AllowIPPPassword to true for existing users where it's not set
-	// This handles the case where the column was added to existing users
-	db.Model(&models.User{}).Where("allow_ipp_password = ?", false).Update("allow_ipp_password", true)
-
 	return nil
 }
