@@ -123,21 +123,24 @@ else {
 if (-not $DriverInstalled) {
     Write-Host ""
     Write-Host "CRITICAL: The required driver is missing." -ForegroundColor Red
-    
-    $Msg = "The printer driver '$DriverName' is not installed on this computer.\`n\`n" +
-           "Please download and install the driver manually.\`n\`n" +
-           "Once installed, run this script again."
-    
-    Show-UserPrompt $Msg
 
     ${driver.installerUrl ? `
     Add-Type -AssemblyName PresentationFramework
+    $Msg = "The printer driver '$DriverName' is not installed on this computer, and required to install driver manually.\`n\`n" +
+           "Would you like to download and install the driver now?\`n"
+
     $Result = [System.Windows.MessageBox]::Show($Msg, "Printer Setup Required", [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Warning)
     
     if ($Result -eq [System.Windows.MessageBoxResult]::Yes) {
         Start-Process '${driver.installerUrl}'
+        Show-UserPrompt "The driver installer file has been downloaded.\`nPlease run the installer, and install the driver manually.\`n\`nOnce installed, run this script to setup the printer."
     }
+
     ` : `
+    $Msg = "The printer driver '$DriverName' is not installed on this computer.\`n\`n" +
+           "Please download and install the driver manually.\`n\`n" +
+           "Once installed, run this script again."
+
     Show-UserPrompt $Msg
     `}
     
