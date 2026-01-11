@@ -34,7 +34,7 @@ Thumbs.db
 dist/
 
 # Generated Swagger docs
-docs/
+/docs/
 
 # Frontend
 web/node_modules/
